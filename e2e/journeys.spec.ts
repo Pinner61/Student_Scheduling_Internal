@@ -79,3 +79,13 @@ test("admin three-dot menu does not deactivate until confirmation", async ({ pag
   await expect(page.getByText("User deactivated")).toBeVisible();
   await expect(row.getByText("inactive")).toBeVisible();
 });
+
+test("sign out returns to the demo login page", async ({ page }) => {
+  await signIn(page, "Student");
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Student alex.chen@asu.edu" })).toBeVisible();
+  await signIn(page, "Supervisor");
+  await expect(page.getByRole("heading", { name: "Today’s team" })).toBeVisible();
+});

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { getNavItems } from "@/lib/auth/rbac";
 import type { SessionUser } from "@/types";
-import { Button } from "@/components/ui/button";
 import { RoleSwitcher } from "@/components/dev/role-switcher";
+import { SignOutButton } from "@/components/layout/sign-out-button";
 
 const showRoleSwitcher =
   process.env.NODE_ENV === "development" ||
@@ -49,12 +49,7 @@ export function AppShell({ user, children }: AppShellProps) {
             <span className="hidden text-sm sm:inline">
               {user.firstName} {user.lastName}
             </span>
-            <form action="/api/auth/logout" method="POST">
-              <Button type="submit" variant="ghost" size="sm" aria-label="Sign out">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sign out</span>
-              </Button>
-            </form>
+            <SignOutButton />
           </div>
         </div>
         <nav

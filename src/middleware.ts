@@ -4,7 +4,7 @@ import { SESSION_COOKIE } from "@/lib/auth/constants";
 import { canAccessPath, getRoleHomePath } from "@/lib/auth/rbac";
 import type { SessionUser } from "@/types";
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/auth/demo-switch"];
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/auth/logout", "/api/auth/demo-switch"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
