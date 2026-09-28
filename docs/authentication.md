@@ -14,6 +14,21 @@ The role switcher is available only when demo auth is enabled **and** either the
 
 Student registration still works locally by creating a profile in the demo store. Privileged users are invited; the admin UI shows a copyable activation link because email is not sent unless a provider is actually implemented.
 
+### Hosted review (Render)
+
+To keep Supabase registration/login/invites available **and** show the seeded demo accounts on the hosted review app, set:
+
+```
+ENABLE_DEMO_AUTH=true
+NEXT_PUBLIC_ENABLE_DEMO_AUTH=true
+NEXT_PUBLIC_DEMO_MODE=true
+NEXT_PUBLIC_ENABLE_ROLE_SWITCHER=false
+```
+
+Do not remove existing Supabase credentials. `NEXT_PUBLIC_DEMO_MODE=true` is required so the seeded store (including `alex.chen@asu.edu`, `smitchell@asu.edu`, and `preyes@asu.edu`) is loaded. Change these in the Render dashboard and trigger a new deploy; repository commits cannot set Render environment variables.
+
+Turn all three demo flags back to `false` before a real pilot.
+
 ### Production
 
 Set:
