@@ -10,6 +10,7 @@ import type {
   TeamMembership,
   UserWithTeam,
 } from "@/types";
+import { DEFAULT_SETTINGS } from "@/types";
 import { getScheduleStatus } from "@/lib/schedule/engine";
 import { createSeedDatabase, type DemoDatabase } from "./seed-data";
 import { v4 as uuidv4 } from "uuid";
@@ -28,7 +29,7 @@ export function resetDemoStore(): void {
 }
 
 export function getDemoSettings(): AppSettings {
-  return { ...getStore().settings };
+  return { ...DEFAULT_SETTINGS, ...getStore().settings };
 }
 
 export function updateDemoSettings(
@@ -171,12 +172,15 @@ export function reviewException(
   reviewerId: string,
   reviewNote?: string
 ): ScheduleException | undefined {
+  if (status === "DECLINED" && !reviewNote?.trim()) {
+    throw new Error("A rejection reason is required.");
+  }
   const exception = getStore().exceptions.find((e) => e.id === exceptionId);
   if (!exception) return undefined;
   exception.status = status;
   exception.reviewedBy = reviewerId;
   exception.reviewedAt = new Date().toISOString();
-  exception.reviewNote = reviewNote ?? null;
+  exception.reviewNote = reviewNote?.trim() || null;
   exception.updatedAt = new Date().toISOString();
   addAuditLog(
     reviewerId,

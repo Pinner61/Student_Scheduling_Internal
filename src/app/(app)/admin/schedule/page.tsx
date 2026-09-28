@@ -53,9 +53,10 @@ export default async function AdminSchedulePage({ searchParams }: PageProps) {
         ).length;
         const totalPeople = coverage.filter((c) => c.blocks.length > 0).length;
         const below =
-          officePeople < settings.coverageThresholdOffice ||
-          remotePeople < settings.coverageThresholdRemote ||
-          totalPeople < settings.coverageThresholdTotal;
+          settings.coverageThresholdsEnabled &&
+          (officePeople < settings.coverageThresholdOffice ||
+            remotePeople < settings.coverageThresholdRemote ||
+            totalPeople < settings.coverageThresholdTotal);
 
         return (
           <Card key={team.id}>
@@ -67,7 +68,13 @@ export default async function AdminSchedulePage({ searchParams }: PageProps) {
                     {officePeople} office · {remotePeople} remote · {totalPeople} scheduled
                   </CardDescription>
                 </div>
-                {below && <Badge variant="warning">Below configured threshold</Badge>}
+                {below && (
+                  <Badge variant="warning">
+                    Below coverage threshold ({settings.coverageThresholdOffice} office /{" "}
+                    {settings.coverageThresholdRemote} remote / {settings.coverageThresholdTotal}{" "}
+                    scheduled)
+                  </Badge>
+                )}
               </div>
             </CardHeader>
             <CardContent>

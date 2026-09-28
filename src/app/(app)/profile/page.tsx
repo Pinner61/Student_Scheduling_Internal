@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { recurringToWeeklyRanges } from "@/lib/schedule/engine";
 import { getDayName, formatTimeRange } from "@/lib/utils/time";
+import { ExceptionStatusBadge } from "@/components/schedule/exception-status-badge";
+import { studentVisibleExceptions } from "@/lib/schedule/exceptions";
 
 export default async function ProfilePage() {
   const user = await getSessionUser();
@@ -12,9 +14,8 @@ export default async function ProfilePage() {
   const profile = getUser(user.id);
   const availability = getAvailability(user.id);
   const weeklyRanges = recurringToWeeklyRanges(availability);
-  const exceptions = getExceptions(user.id)
-    .filter((e) => e.status === "PENDING" || e.status === "APPROVED")
-    .slice(0, 5);
+  const exceptions = studentVisibleExceptions(getExceptions(user.id)).slice(0, 5);
+  const accountStatus = profile?.status === "active" ? "Active" : "Inactive";
 
   return (
     <div className="space-y-6">
@@ -38,10 +39,10 @@ export default async function ProfilePage() {
           <p>
             <span className="font-medium">Team:</span> {profile?.teamName ?? "Unassigned"}
           </p>
-          <p>
-            <span className="font-medium">Status:</span>{" "}
+          <p className="flex flex-wrap items-center gap-2">
+            <span className="font-medium">Account Status:</span>
             <Badge variant={profile?.status === "active" ? "success" : "neutral"}>
-              {profile?.status}
+              {accountStatus}
             </Badge>
           </p>
         </CardContent>
@@ -80,13 +81,16 @@ export default async function ProfilePage() {
       {exceptions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Upcoming exceptions</CardTitle>
+            <CardTitle className="text-base">Exceptions</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm">
               {exceptions.map((ex) => (
-                <li key={ex.id}>
-                  {ex.exceptionDate} — {formatTimeRange(ex.startTime, ex.endTime)} ({ex.status})
+                <li key={ex.id} className="flex flex-wrap items-center gap-2">
+                  <span>
+                    {ex.exceptionDate} — {formatTimeRange(ex.startTime, ex.endTime)}
+                  </span>
+                  <ExceptionStatusBadge status={ex.status} />
                 </li>
               ))}
             </ul>

@@ -3,13 +3,11 @@ import {
   findAvailableStudents,
   getSupervisorTeams,
   listTeams,
+  getSettings,
 } from "@/lib/services/data-service";
 import { getTodayDateString } from "@/lib/schedule/engine";
 import { FindAvailabilityForm } from "@/features/coverage/find-availability-form";
-import { WorkModeBadge } from "@/components/schedule/work-mode-badge";
-import { formatTimeRange } from "@/lib/utils/time";
-import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
+import { AvailabilityWindowResults } from "@/features/coverage/availability-window-results";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface PageProps {
@@ -31,6 +29,7 @@ export default async function FindAvailabilityPage({ searchParams }: PageProps) 
   const start = params.start ?? "10:00";
   const end = params.end ?? "12:00";
   const searched = Boolean(params.date || params.start);
+  const settings = getSettings();
   const teams =
     user.role === "administrator" ? listTeams() : getSupervisorTeams(user.id);
 
@@ -70,35 +69,13 @@ export default async function FindAvailabilityPage({ searchParams }: PageProps) 
       )}
 
       {results.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-sm font-medium">{results.length} students available</p>
-          {results.map(({ student, blocks, coversWindow }) => (
-            <Card key={student.id}>
-              <CardContent className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <Link
-                    href={`/supervisor/students/${student.id}`}
-                    className="font-medium text-[var(--color-primary)] underline-offset-2 hover:underline"
-                  >
-                    {student.firstName} {student.lastName}
-                  </Link>
-                  <p className="text-sm text-[var(--color-muted-foreground)]">
-                    {student.teamName ?? "Unassigned"}
-                    {coversWindow ? " · Covers the full window" : " · Overlaps this window"}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2 text-sm">
-                  {blocks.map((b, i) => (
-                    <span key={`${b.startTime}-${i}`} className="inline-flex items-center gap-1">
-                      {formatTimeRange(b.startTime, b.endTime)}
-                      <WorkModeBadge mode={b.workMode} />
-                    </span>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <AvailabilityWindowResults
+          results={results}
+          windowStart={start}
+          windowEnd={end}
+          workingDayStart={settings.workingDayStart}
+          workingDayEnd={settings.workingDayEnd}
+        />
       )}
     </div>
   );

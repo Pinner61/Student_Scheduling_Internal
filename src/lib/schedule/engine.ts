@@ -281,15 +281,43 @@ export function isCurrentlyWorking(blocks: ScheduleBlock[], nowTime: string): bo
 }
 
 export function getScheduleStatus(
-  recurring: RecurringAvailability[],
-  minHoursPerWeek = 5
-): "complete" | "incomplete" | "not_started" {
-  if (recurring.length === 0) return "not_started";
-  const totalMinutes = recurring.reduce(
-    (sum, r) => sum + (timeToMinutes(r.endTime) - timeToMinutes(r.startTime)),
-    0
+  recurring: RecurringAvailability[]
+): "submitted" | "not_started" {
+  return recurring.length === 0 ? "not_started" : "submitted";
+}
+
+export function exceptionCoveringSlot(
+  exceptions: ScheduleException[],
+  date: string,
+  slotStart: string,
+  intervalMinutes: number
+): ScheduleException | undefined {
+  const slotEnd = minutesToTime(timeToMinutes(slotStart) + intervalMinutes);
+  return exceptions.find(
+    (e) =>
+      e.status === "APPROVED" &&
+      e.exceptionDate === date &&
+      rangesOverlap(e.startTime, e.endTime, slotStart, slotEnd)
   );
-  return totalMinutes >= minHoursPerWeek * 60 ? "complete" : "incomplete";
+}
+
+export function coversTimeWindow(
+  blocks: { startTime: string; endTime: string }[],
+  windowStart: string,
+  windowEnd: string
+): boolean {
+  let cursor = timeToMinutes(windowStart);
+  const end = timeToMinutes(windowEnd);
+  const sorted = [...blocks].sort((a, b) => compareTimes(a.startTime, b.startTime));
+  for (const block of sorted) {
+    const start = timeToMinutes(block.startTime);
+    const stop = timeToMinutes(block.endTime);
+    if (stop <= cursor) continue;
+    if (start > cursor) return false;
+    cursor = Math.max(cursor, stop);
+    if (cursor >= end) return true;
+  }
+  return cursor >= end;
 }
 
 export function getTodayDateString(): string {

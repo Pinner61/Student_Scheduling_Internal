@@ -111,18 +111,31 @@ export async function reviewExceptionAction(
   const user = await getSessionUser();
   if (!user) throw new Error("Unauthorized");
 
-  const updated = reviewExceptionRequest(user, exceptionId, status, reviewNote);
-  const { notify } = await import("@/lib/notifications");
-  await notify({
-    name: status === "APPROVED" ? "exception_approved" : "exception_declined",
-    recipientUserIds: updated ? [updated.userId] : [],
-    payload: { exceptionId },
-  });
-  revalidatePath("/exceptions");
-  revalidatePath("/supervisor/exceptions");
-  revalidatePath("/admin/exceptions");
-  revalidatePath("/schedule");
-  return { success: true };
+  if (status === "DECLINED" && !reviewNote?.trim()) {
+    return { error: "A rejection reason is required." };
+  }
+
+  try {
+    const updated = reviewExceptionRequest(user, exceptionId, status, reviewNote);
+    const { notify } = await import("@/lib/notifications");
+    await notify({
+      name: status === "APPROVED" ? "exception_approved" : "exception_declined",
+      recipientUserIds: updated ? [updated.userId] : [],
+      payload: { exceptionId },
+    });
+    revalidatePath("/exceptions");
+    revalidatePath("/supervisor/exceptions");
+    revalidatePath("/supervisor/students");
+    revalidatePath("/supervisor/overview");
+    revalidatePath("/supervisor/team");
+    revalidatePath("/admin/exceptions");
+    revalidatePath("/schedule");
+    return { success: true };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Unable to review this exception.",
+    };
+  }
 }
 
 export async function cancelExceptionAction(exceptionId: string) {
@@ -238,6 +251,7 @@ export async function updateSettingsAction(settings: {
   workingDayEnd?: string;
   schedulingIntervalMinutes?: number;
   timezone?: string;
+  coverageThresholdsEnabled?: boolean;
   coverageThresholdOffice?: number;
   coverageThresholdRemote?: number;
   coverageThresholdTotal?: number;

@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import { getSessionUser } from "@/lib/auth/session";
 import { getAvailability, getSettings } from "@/lib/services/data-service";
 import { AvailabilityPaintEditor } from "@/features/availability/availability-paint-editor";
@@ -14,6 +15,10 @@ export default async function AvailabilityPage() {
 
   return (
     <div className="space-y-6">
+      <Link href="/schedule" className={buttonVariants({ variant: "ghost" })}>
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to your schedule
+      </Link>
       <div>
         <h1 className="text-2xl font-bold">Edit Weekly Availability</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
@@ -33,9 +38,6 @@ export default async function AvailabilityPage() {
         workingDayEnd={settings.workingDayEnd}
         intervalMinutes={settings.schedulingIntervalMinutes}
       />
-      <Link href="/schedule" className={buttonVariants({ variant: "ghost" })}>
-        Back to Your Schedule
-      </Link>
     </div>
   );
 }

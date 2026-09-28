@@ -1,4 +1,5 @@
 import { format, parseISO } from "date-fns";
+import { enUS } from "date-fns/locale";
 import type { RecurringAvailability, ScheduleBlock, ScheduleException } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExceptionStatusBadge } from "@/components/schedule/exception-status-badge";
@@ -34,7 +35,7 @@ export function ExceptionReviewCard({
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {teamName ? `${teamName} · ` : ""}
             {submittedLabel ??
-              `Submitted ${format(parseISO(exception.createdAt), "MMM d, yyyy")}`}
+              `Submitted ${format(parseISO(exception.createdAt), "MMM d, yyyy", { locale: enUS })}`}
           </p>
         </div>
         <ExceptionStatusBadge status={exception.status} />
@@ -43,7 +44,7 @@ export function ExceptionReviewCard({
         <div className="grid gap-4 text-sm sm:grid-cols-3">
           <div>
             <h4 className="mb-1 font-medium">Requested change</h4>
-            <p>{format(parseISO(exception.exceptionDate), "MMM d, yyyy")}</p>
+            <p>{format(parseISO(exception.exceptionDate), "MMM d, yyyy", { locale: enUS })}</p>
             <p>{formatTimeRange(exception.startTime, exception.endTime)}</p>
             <p className="capitalize">
               {exception.exceptionType.replace(/_/g, " ").toLowerCase()}
@@ -77,10 +78,21 @@ export function ExceptionReviewCard({
             )}
           </div>
         </div>
-        {exception.reviewedBy && exception.reviewedAt && (
+        {exception.status === "DECLINED" && exception.reviewNote && (
+          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-950">
+            <p className="font-medium">Rejection reason</p>
+            <p>{exception.reviewNote}</p>
+          </div>
+        )}
+        {exception.reviewedBy && exception.reviewedAt && exception.status !== "DECLINED" && (
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            Reviewed {format(parseISO(exception.reviewedAt), "MMM d, yyyy")}
+            Reviewed {format(parseISO(exception.reviewedAt), "MMM d, yyyy", { locale: enUS })}
             {exception.reviewNote ? ` · ${exception.reviewNote}` : ""}
+          </p>
+        )}
+        {exception.status === "DECLINED" && exception.reviewedAt && (
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            Rejected {format(parseISO(exception.reviewedAt), "MMM d, yyyy h:mm a", { locale: enUS })}
           </p>
         )}
         {canReview && exception.status === "PENDING" && (

@@ -1,14 +1,15 @@
 import { Badge } from "@/components/ui/badge";
 import type { ExceptionStatus } from "@/types";
+import { exceptionStatusLabel } from "@/components/schedule/schedule-language";
 
-const config: Record<ExceptionStatus, { label: string; variant: "success" | "warning" | "danger" | "neutral" }> = {
-  PENDING: { label: "Pending", variant: "warning" },
-  APPROVED: { label: "Approved", variant: "success" },
-  DECLINED: { label: "Declined", variant: "danger" },
-  CANCELLED: { label: "Cancelled", variant: "neutral" },
+const config: Record<ExceptionStatus, { variant: "success" | "warning" | "danger" | "neutral" }> = {
+  PENDING: { variant: "warning" },
+  APPROVED: { variant: "success" },
+  DECLINED: { variant: "danger" },
+  CANCELLED: { variant: "neutral" },
 };
 
 export function ExceptionStatusBadge({ status }: { status: ExceptionStatus }) {
-  const { label, variant } = config[status];
-  return <Badge variant={variant}>{label}</Badge>;
+  const { variant } = config[status];
+  return <Badge variant={variant}>{exceptionStatusLabel(status)}</Badge>;
 }

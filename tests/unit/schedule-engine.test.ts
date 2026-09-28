@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   getEffectiveScheduleForDate,
   validateAvailabilityRanges,
+  coversTimeWindow,
+  exceptionCoveringSlot,
 } from "@/lib/schedule/engine";
 import type { RecurringAvailability, ScheduleException } from "@/types";
 
@@ -134,5 +136,47 @@ describe("exception application", () => {
     );
     expect(blocks).toHaveLength(1);
     expect(blocks[0].endTime).toBe("13:00");
+  });
+});
+
+describe("coversTimeWindow", () => {
+  it("treats adjacent blocks as full coverage", () => {
+    expect(
+      coversTimeWindow(
+        [
+          { startTime: "09:00", endTime: "10:00" },
+          { startTime: "10:00", endTime: "12:00" },
+        ],
+        "09:00",
+        "12:00"
+      )
+    ).toBe(true);
+  });
+
+  it("detects a partial overlap", () => {
+    expect(
+      coversTimeWindow([{ startTime: "09:00", endTime: "11:00" }], "10:00", "12:00")
+    ).toBe(false);
+  });
+});
+
+describe("exceptionCoveringSlot", () => {
+  it("finds an approved exception on a slot and ignores pending", () => {
+    const approved = exception({
+      exceptionDate: "2026-09-14",
+      startTime: "10:00",
+      endTime: "11:00",
+      exceptionType: "UNAVAILABLE",
+    });
+    const pending = exception({
+      id: "e2",
+      exceptionDate: "2026-09-14",
+      startTime: "10:00",
+      endTime: "11:00",
+      exceptionType: "UNAVAILABLE",
+      status: "PENDING",
+    });
+    expect(exceptionCoveringSlot([approved, pending], "2026-09-14", "10:00", 30)?.id).toBe("e1");
+    expect(exceptionCoveringSlot([pending], "2026-09-14", "10:00", 30)).toBeUndefined();
   });
 });

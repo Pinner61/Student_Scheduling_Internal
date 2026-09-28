@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils/cn";
-import type { WorkMode } from "@/types";
+import type { ExceptionStatus, ScheduleStatus, WorkMode } from "@/types";
 
 export function workModeCellClass(mode: WorkMode | null | undefined, options?: { compact?: boolean }) {
   if (mode === "OFFICE") {
@@ -21,6 +21,33 @@ export function workModeLabel(mode: WorkMode): string {
   return mode === "OFFICE" ? "Office" : "Remote";
 }
 
+export function exceptionOverlayClass(unavailable: boolean) {
+  if (unavailable) {
+    return cn(
+      "border-amber-500 bg-amber-100 text-amber-950",
+      "bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(180,83,9,0.18)_5px,rgba(180,83,9,0.18)_9px)]"
+    );
+  }
+  return "ring-1 ring-inset ring-amber-500/80";
+}
+
+export function exceptionStatusLabel(status: ExceptionStatus): string {
+  switch (status) {
+    case "PENDING":
+      return "Pending";
+    case "APPROVED":
+      return "Approved";
+    case "DECLINED":
+      return "Rejected";
+    case "CANCELLED":
+      return "Cancelled";
+  }
+}
+
+export function scheduleStatusLabel(status: ScheduleStatus): string {
+  return status === "submitted" ? "Schedule submitted" : "No schedule submitted";
+}
+
 export const EXCEPTION_TYPE_LABEL: Record<string, string> = {
   UNAVAILABLE: "Unavailable",
   REMOTE_INSTEAD: "Remote instead of Office",
@@ -32,7 +59,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   availability_changed: "Updated availability",
   exception_submitted: "Submitted an exception",
   exception_approved: "Approved an exception",
-  exception_declined: "Declined an exception",
+  exception_declined: "Rejected an exception",
   exception_cancelled: "Cancelled an exception",
   user_created: "Created a user",
   user_updated: "Updated a user",

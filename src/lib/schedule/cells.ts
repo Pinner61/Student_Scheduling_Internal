@@ -86,31 +86,23 @@ export function formatWeeklyAvailabilityCopy(ranges: AvailabilityRangeLike[]): s
       .filter((r) => r.dayOfWeek === day)
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (dayRanges.length === 0) {
-      return `${getDayName(day)}: Unavailable`;
+      return `${getDayName(day)}\nUnavailable`;
     }
-    const parts = dayRanges.map(
-      (r) =>
-        `${formatTime12(r.startTime)}–${formatTime12(r.endTime)} ${r.workMode === "OFFICE" ? "Office" : "Remote"}`
-    );
-    return `${getDayName(day)}: ${parts.join(", ")}`;
-  }).join("\n");
-}
-
-export function copyDayToDays(
-  map: Record<string, WorkMode>,
-  sourceDay: number,
-  targetDays: number[],
-  slotStarts: string[]
-): Record<string, WorkMode> {
-  const next = { ...map };
-  for (const target of targetDays) {
-    for (const slot of slotStarts) {
-      delete next[cellKey(target, slot)];
-      const source = map[cellKey(sourceDay, slot)];
-      if (source) next[cellKey(target, slot)] = source;
+    const office = dayRanges.filter((r) => r.workMode === "OFFICE");
+    const remote = dayRanges.filter((r) => r.workMode === "REMOTE");
+    const lines = [getDayName(day)];
+    if (office.length > 0) {
+      lines.push(
+        `Office: ${office.map((r) => `${formatTime12(r.startTime)}–${formatTime12(r.endTime)}`).join(", ")}`
+      );
     }
-  }
-  return next;
+    if (remote.length > 0) {
+      lines.push(
+        `Remote: ${remote.map((r) => `${formatTime12(r.startTime)}–${formatTime12(r.endTime)}`).join(", ")}`
+      );
+    }
+    return lines.join("\n");
+  }).join("\n\n");
 }
 
 export { generateSlotStarts };

@@ -4,6 +4,7 @@ import { getTodayDateString } from "@/lib/schedule/engine";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { scheduleStatusLabel } from "@/components/schedule/schedule-language";
 
 export default async function AdminOverviewPage() {
   const stats = getAdminOverviewStats();
@@ -73,14 +74,14 @@ export default async function AdminOverviewPage() {
             )}
             {stats.incompleteStudents.length > 0 && (
               <div>
-                <h3 className="font-medium mb-2">Students without complete schedules</h3>
+                <h3 className="font-medium mb-2">Students with no schedule submitted</h3>
                 <ul className="space-y-1 text-sm">
                   {stats.incompleteStudents.slice(0, 5).map((s) => (
                     <li key={s.id}>
                       <Link href={`/admin/users/${s.id}`} className="text-[var(--color-primary)] underline">
                         {s.firstName} {s.lastName}
                       </Link>{" "}
-                      ({s.scheduleStatus.replace("_", " ")})
+                      ({scheduleStatusLabel(s.scheduleStatus)})
                     </li>
                   ))}
                 </ul>

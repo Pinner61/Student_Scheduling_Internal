@@ -8,6 +8,8 @@ import type {
   TeamMembership,
 } from "@/types";
 import { DEFAULT_SETTINGS } from "@/types";
+import { getCurrentWeekStart } from "@/lib/schedule/engine";
+import { addDaysToDateString } from "@/lib/utils/time";
 import { v4 as uuidv4 } from "uuid";
 
 function id() {
@@ -181,56 +183,114 @@ export function createSeedDatabase(): DemoDatabase {
   nextFriday.setDate(nextFriday.getDate() + ((5 - nextFriday.getDay() + 7) % 7 || 7));
   const nextTuesday = new Date();
   nextTuesday.setDate(nextTuesday.getDate() + ((2 - nextTuesday.getDay() + 7) % 7 || 7));
+  const thisMonday = getCurrentWeekStart();
+  const recentRejectedAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const expiredRejectedAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
+
+  const approvedOverlay: ScheduleException = {
+    id: id(),
+    userId: studentIds[0],
+    exceptionDate: thisMonday,
+    startTime: "10:00",
+    endTime: "11:00",
+    exceptionType: "UNAVAILABLE",
+    replacementMode: null,
+    reason: "Design critique conflict",
+    status: "APPROVED",
+    reviewedBy: sup1,
+    reviewedAt: now,
+    reviewNote: "Approved — coverage is already in place.",
+    createdAt: now,
+    updatedAt: now,
+  };
+  const pendingAlex: ScheduleException = {
+    id: id(),
+    userId: studentIds[0],
+    exceptionDate: nextFriday.toISOString().split("T")[0],
+    startTime: "14:00",
+    endTime: "16:00",
+    exceptionType: "UNAVAILABLE",
+    replacementMode: null,
+    reason: "Doctor appointment",
+    status: "PENDING",
+    reviewedBy: null,
+    reviewedAt: null,
+    reviewNote: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const rejectedRecent: ScheduleException = {
+    id: id(),
+    userId: studentIds[0],
+    exceptionDate: addDaysToDateString(thisMonday, 2),
+    startTime: "13:00",
+    endTime: "16:00",
+    exceptionType: "REMOTE_INSTEAD",
+    replacementMode: "REMOTE",
+    reason: "Need to work remotely for a shoot",
+    status: "DECLINED",
+    reviewedBy: sup1,
+    reviewedAt: recentRejectedAt,
+    reviewNote: "Office coverage is required for that afternoon.",
+    createdAt: recentRejectedAt,
+    updatedAt: recentRejectedAt,
+  };
+  const rejectedExpired: ScheduleException = {
+    id: id(),
+    userId: studentIds[0],
+    exceptionDate: addDaysToDateString(thisMonday, -7),
+    startTime: "09:00",
+    endTime: "10:00",
+    exceptionType: "UNAVAILABLE",
+    replacementMode: null,
+    reason: "Older request kept for audit history",
+    status: "DECLINED",
+    reviewedBy: sup1,
+    reviewedAt: expiredRejectedAt,
+    reviewNote: "Too late to change that week’s coverage.",
+    createdAt: expiredRejectedAt,
+    updatedAt: expiredRejectedAt,
+  };
+  const approvedTaylor: ScheduleException = {
+    id: id(),
+    userId: studentIds[2],
+    exceptionDate: nextTuesday.toISOString().split("T")[0],
+    startTime: "10:00",
+    endTime: "14:00",
+    exceptionType: "REMOTE_INSTEAD",
+    replacementMode: "REMOTE",
+    reason: "Working from home due to campus event",
+    status: "APPROVED",
+    reviewedBy: sup1,
+    reviewedAt: now,
+    reviewNote: "Approved",
+    createdAt: now,
+    updatedAt: now,
+  };
+  const pendingRiley: ScheduleException = {
+    id: id(),
+    userId: studentIds[5],
+    exceptionDate: nextFriday.toISOString().split("T")[0],
+    startTime: "09:00",
+    endTime: "11:00",
+    exceptionType: "UNAVAILABLE",
+    replacementMode: null,
+    reason: "Class conflict",
+    status: "PENDING",
+    reviewedBy: null,
+    reviewedAt: null,
+    reviewNote: null,
+    createdAt: now,
+    updatedAt: now,
+  };
 
   const exceptions: ScheduleException[] = [
-    {
-      id: id(),
-      userId: studentIds[0],
-      exceptionDate: nextFriday.toISOString().split("T")[0],
-      startTime: "14:00",
-      endTime: "16:00",
-      exceptionType: "UNAVAILABLE",
-      replacementMode: null,
-      reason: "Doctor appointment",
-      status: "PENDING",
-      reviewedBy: null,
-      reviewedAt: null,
-      reviewNote: null,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: id(),
-      userId: studentIds[2],
-      exceptionDate: nextTuesday.toISOString().split("T")[0],
-      startTime: "10:00",
-      endTime: "14:00",
-      exceptionType: "REMOTE_INSTEAD",
-      replacementMode: "REMOTE",
-      reason: "Working from home due to campus event",
-      status: "APPROVED",
-      reviewedBy: sup1,
-      reviewedAt: now,
-      reviewNote: "Approved",
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: id(),
-      userId: studentIds[5],
-      exceptionDate: nextFriday.toISOString().split("T")[0],
-      startTime: "09:00",
-      endTime: "11:00",
-      exceptionType: "UNAVAILABLE",
-      replacementMode: null,
-      reason: "Class conflict",
-      status: "PENDING",
-      reviewedBy: null,
-      reviewedAt: null,
-      reviewNote: null,
-      createdAt: now,
-      updatedAt: now,
-    },
+    approvedOverlay,
+    pendingAlex,
+    rejectedRecent,
+    rejectedExpired,
+    approvedTaylor,
+    pendingRiley,
   ];
 
   const auditLogs: AuditLog[] = [
@@ -248,7 +308,7 @@ export function createSeedDatabase(): DemoDatabase {
       actorUserId: sup1,
       action: "exception_approved",
       entityType: "schedule_exception",
-      entityId: exceptions[1].id,
+      entityId: approvedTaylor.id,
       metadata: { studentId: studentIds[2] },
       createdAt: now,
     },

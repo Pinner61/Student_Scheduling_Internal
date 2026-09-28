@@ -3,6 +3,7 @@ import type {
   AuditLog,
   Profile,
   RecurringAvailability,
+  ScheduleBlock,
   ScheduleException,
   SessionUser,
   Team,
@@ -11,12 +12,12 @@ import type {
 import * as demo from "@/lib/demo/store";
 import { hasPermission, requirePermission } from "@/lib/auth/rbac";
 import {
+  coversTimeWindow,
   getEffectiveScheduleForDate,
   getEffectiveScheduleForWeek,
   getCurrentWeekStart,
 } from "@/lib/schedule/engine";
-import type { ScheduleBlock } from "@/types";
-import { rangesOverlap, timeToMinutes } from "@/lib/utils/time";
+import { rangesOverlap } from "@/lib/utils/time";
 
 export function getSettings(): AppSettings {
   return demo.getDemoSettings();
@@ -174,11 +175,7 @@ export function findAvailableStudents(params: {
         return rangesOverlap(b.startTime, b.endTime, params.startTime, params.endTime);
       });
       if (blocks.length === 0) continue;
-      const coversWindow = blocks.some(
-        (b) =>
-          timeToMinutes(b.startTime) <= timeToMinutes(params.startTime) &&
-          timeToMinutes(b.endTime) >= timeToMinutes(params.endTime)
-      );
+      const coversWindow = coversTimeWindow(blocks, params.startTime, params.endTime);
       results.push({ student: details, blocks, coversWindow });
     }
   }
@@ -342,9 +339,7 @@ export function getAdminOverviewStats() {
   const users = demo.getAllUsersWithTeams();
   const students = users.filter((u) => u.role === "student" && u.status === "active");
   const pendingExceptions = demo.getAllExceptions().filter((e) => e.status === "PENDING");
-  const incomplete = students.filter(
-    (s) => s.scheduleStatus === "incomplete" || s.scheduleStatus === "not_started"
-  );
+  const incomplete = students.filter((s) => s.scheduleStatus === "not_started");
   const unassigned = students.filter((s) => !s.teamId);
   const teams = demo.getAllTeams().filter((t) => t.status === "active");
 
