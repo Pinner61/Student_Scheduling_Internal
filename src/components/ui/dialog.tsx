@@ -12,6 +12,8 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -23,6 +25,35 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
     };
   }, [open]);
 
+  React.useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    const focusable = panel?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable?.[0];
+    const last = focusable?.[focusable.length - 1];
+    first?.focus();
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onOpenChange(false);
+        return;
+      }
+      if (event.key !== "Tab" || !first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onOpenChange]);
+
   if (!open) return null;
 
   return (
@@ -32,7 +63,12 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
       />
-      <div className="relative z-50 w-full max-w-lg" role="dialog" aria-modal="true">
+      <div
+        ref={panelRef}
+        className="relative z-50 w-full max-w-lg"
+        role="dialog"
+        aria-modal="true"
+      >
         {children}
       </div>
     </div>
@@ -51,7 +87,7 @@ export function DialogContent({
   return (
     <div
       className={cn(
-        "rounded-lg border border-[var(--color-border)] bg-white p-6 shadow-lg",
+        "relative rounded-lg border border-[var(--color-border)] bg-white p-6 shadow-lg",
         className
       )}
     >

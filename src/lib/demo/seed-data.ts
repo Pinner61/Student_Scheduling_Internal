@@ -1,9 +1,12 @@
 import type {
+  AppNotification,
   AppSettings,
   AuditLog,
   Profile,
   RecurringAvailability,
   ScheduleException,
+  SchedulePeriod,
+  ScheduleSubmission,
   Team,
   TeamMembership,
 } from "@/types";
@@ -26,13 +29,19 @@ export interface DemoAccount {
   label: string;
 }
 
+export const FALL_2026_PERIOD_ID = "period-fall-2026";
+export const SPRING_2027_PERIOD_ID = "period-spring-2027";
+
 export interface DemoDatabase {
   profiles: Profile[];
   teams: Team[];
   memberships: TeamMembership[];
+  periods: SchedulePeriod[];
+  submissions: ScheduleSubmission[];
   availability: RecurringAvailability[];
   exceptions: ScheduleException[];
   auditLogs: AuditLog[];
+  notifications: AppNotification[];
   settings: AppSettings;
   accounts: DemoAccount[];
 }
@@ -88,12 +97,14 @@ function makeAvailability(
   dayOfWeek: number,
   startTime: string,
   endTime: string,
-  workMode: "OFFICE" | "REMOTE"
+  workMode: "OFFICE" | "REMOTE",
+  schedulePeriodId = FALL_2026_PERIOD_ID
 ): RecurringAvailability {
   const now = new Date().toISOString();
   return {
     id: id(),
     userId,
+    schedulePeriodId,
     dayOfWeek,
     startTime,
     endTime,
@@ -190,6 +201,7 @@ export function createSeedDatabase(): DemoDatabase {
   const approvedOverlay: ScheduleException = {
     id: id(),
     userId: studentIds[0],
+    schedulePeriodId: FALL_2026_PERIOD_ID,
     exceptionDate: thisMonday,
     startTime: "10:00",
     endTime: "11:00",
@@ -206,6 +218,7 @@ export function createSeedDatabase(): DemoDatabase {
   const pendingAlex: ScheduleException = {
     id: id(),
     userId: studentIds[0],
+    schedulePeriodId: FALL_2026_PERIOD_ID,
     exceptionDate: nextFriday.toISOString().split("T")[0],
     startTime: "14:00",
     endTime: "16:00",
@@ -222,6 +235,7 @@ export function createSeedDatabase(): DemoDatabase {
   const rejectedRecent: ScheduleException = {
     id: id(),
     userId: studentIds[0],
+    schedulePeriodId: FALL_2026_PERIOD_ID,
     exceptionDate: addDaysToDateString(thisMonday, 2),
     startTime: "13:00",
     endTime: "16:00",
@@ -238,6 +252,7 @@ export function createSeedDatabase(): DemoDatabase {
   const rejectedExpired: ScheduleException = {
     id: id(),
     userId: studentIds[0],
+    schedulePeriodId: FALL_2026_PERIOD_ID,
     exceptionDate: addDaysToDateString(thisMonday, -7),
     startTime: "09:00",
     endTime: "10:00",
@@ -254,6 +269,7 @@ export function createSeedDatabase(): DemoDatabase {
   const approvedTaylor: ScheduleException = {
     id: id(),
     userId: studentIds[2],
+    schedulePeriodId: FALL_2026_PERIOD_ID,
     exceptionDate: nextTuesday.toISOString().split("T")[0],
     startTime: "10:00",
     endTime: "14:00",
@@ -270,6 +286,7 @@ export function createSeedDatabase(): DemoDatabase {
   const pendingRiley: ScheduleException = {
     id: id(),
     userId: studentIds[5],
+    schedulePeriodId: FALL_2026_PERIOD_ID,
     exceptionDate: nextFriday.toISOString().split("T")[0],
     startTime: "09:00",
     endTime: "11:00",
@@ -320,13 +337,83 @@ export function createSeedDatabase(): DemoDatabase {
     { email: `${firstNames[0].toLowerCase()}.${lastNames[0].toLowerCase()}@asu.edu`, password: DEMO_PASSWORD, profileId: studentIds[0], role: "student", label: `${firstNames[0]} ${lastNames[0]} (Student)` },
   ];
 
+  const periods: SchedulePeriod[] = [
+    {
+      id: FALL_2026_PERIOD_ID,
+      name: "Fall 2026",
+      startDate: "2026-08-17",
+      endDate: "2026-12-18",
+      status: "OPEN",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: SPRING_2027_PERIOD_ID,
+      name: "Spring 2027",
+      startDate: "2027-01-11",
+      endDate: "2027-05-07",
+      status: "DRAFT",
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+
+  const submittedAt = "2026-08-28T21:14:00.000Z";
+  const submissions: ScheduleSubmission[] = studentIds.map((userId) => ({
+    id: id(),
+    userId,
+    schedulePeriodId: FALL_2026_PERIOD_ID,
+    status: "SUBMITTED",
+    submittedAt,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  const notifications: AppNotification[] = [
+    {
+      id: id(),
+      userId: sup1,
+      eventType: "exception_submitted",
+      title: "Exception request submitted",
+      body: "Alex Chen requested an exception for review.",
+      status: "unread",
+      readAt: null,
+      metadata: { exceptionId: pendingAlex.id, studentId: studentIds[0] },
+      createdAt: now,
+    },
+    {
+      id: id(),
+      userId: studentIds[0],
+      eventType: "exception_declined",
+      title: "Exception rejected",
+      body: "Your exception was rejected: Office coverage is required for that afternoon.",
+      status: "unread",
+      readAt: null,
+      metadata: { exceptionId: rejectedRecent.id, reviewNote: rejectedRecent.reviewNote },
+      createdAt: recentRejectedAt,
+    },
+  ];
+
+  auditLogs.push({
+    id: id(),
+    actorUserId: admin1,
+    action: "schedule_period_opened",
+    entityType: "schedule_period",
+    entityId: FALL_2026_PERIOD_ID,
+    metadata: { name: "Fall 2026" },
+    createdAt: now,
+  });
+
   return {
     profiles,
     teams,
     memberships,
+    periods,
+    submissions,
     availability,
     exceptions,
     auditLogs,
+    notifications,
     settings: { ...DEFAULT_SETTINGS },
     accounts,
   };

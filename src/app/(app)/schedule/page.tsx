@@ -14,6 +14,7 @@ import {
   getEffectiveWeekSchedule,
   getSettings,
   getAvailability,
+  getCurrentPeriod,
 } from "@/lib/services/data-service";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -24,6 +25,7 @@ import { WorkModeBadge } from "@/components/schedule/work-mode-badge";
 import { formatTimeRange, formatWeekRange, formatLongWeekday } from "@/lib/utils/time";
 import { EXCEPTION_TYPE_LABEL } from "@/components/schedule/schedule-language";
 import { ShareAvailabilityButton } from "@/features/availability/share-availability-button";
+import { ScheduleLifecycleBar } from "@/features/schedule/schedule-lifecycle-bar";
 
 export default async function ScheduleHomePage() {
   const user = await getSessionUser();
@@ -40,6 +42,7 @@ export default async function ScheduleHomePage() {
   const profile = getUser(user.id);
   const settings = getSettings();
   const recurring = getAvailability(user.id);
+  const period = getCurrentPeriod() ?? null;
 
   const weekDates = Array.from({ length: 5 }, (_, i) =>
     format(addDays(parseISO(weekStart), i), "yyyy-MM-dd")
@@ -54,17 +57,13 @@ export default async function ScheduleHomePage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Your Schedule</h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            This week · {formatWeekRange(weekStart)}
-          </p>
-        </div>
+        <ScheduleLifecycleBar
+          period={period}
+          submissionStatus={profile?.submissionStatus ?? "DRAFT"}
+          submittedAt={profile?.submittedAt ?? null}
+        />
         <div className="flex flex-wrap gap-2">
           <ShareAvailabilityButton ranges={recurring} />
-          <Link href="/availability" className={buttonVariants({ size: "lg" })}>
-            Edit Weekly Availability
-          </Link>
         </div>
       </div>
 
@@ -104,8 +103,8 @@ export default async function ScheduleHomePage() {
         <CardHeader>
           <CardTitle>This week</CardTitle>
           <CardDescription>
-            Approved exceptions overlay your normal weekly availability. Pending requests stay on the
-            Exceptions page until a supervisor reviews them.
+            Week of {formatWeekRange(weekStart)}. Approved exceptions overlay your normal weekly
+            availability. Pending requests stay on the Exceptions page until a supervisor reviews them.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

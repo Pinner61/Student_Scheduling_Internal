@@ -14,18 +14,19 @@ Business rules live in `src/lib/schedule/engine.ts` and `src/lib/services/data-s
 
 - **Profile**: identity, role, status (soft-deactivated users remain in history).
 - **Team** and **team membership**: database-driven teams; a user may later belong to more than one team.
-- **Recurring availability**: weekday + start/end + office/remote. Unavailability is the absence of a block, not a stored UNAVAILABLE row.
-- **Schedule exception**: a dated overlay with pending/approved/declined/cancelled status.
-- **Audit log**: actor, action, entity, timestamp, limited metadata.
+- **Schedule period**: admin-defined window (name, dates, DRAFT/OPEN/CLOSED/ARCHIVED). Availability and exceptions belong to a period.
+- **Schedule submission**: explicit DRAFT or SUBMITTED state per student per period, with `submitted_at`.
+- **Recurring availability**: weekday + start/end + office/remote, scoped to `user + schedule_period`.
+- **Schedule exception**: a dated overlay with pending/approved/declined/cancelled status, also period-scoped.
+- **Notification**: in-app unread/read events. Email is an optional adapter and stays disabled without provider credentials.
+- **Audit log**: append-only actor, action, entity, timestamp, limited metadata.
 - **Application settings**: working hours, interval, timezone, coverage thresholds.
 
 ## Authentication model
 
-Development and demo builds use email + password against seeded accounts and an httpOnly session cookie. Roles are always re-read from the profile store/database; the client cannot grant itself a role.
+Development and demo builds use email + password against seeded accounts and an httpOnly session cookie when `ENABLE_DEMO_AUTH` is true. Roles are always re-read from the profile store; the client cannot grant itself a role.
 
-Production is designed for **Supabase Auth**. ASU SSO can sit in front later by mapping an IdP identity to `profiles.auth_user_id` without changing RBAC.
-
-The demo role switcher is available only in development unless explicitly enabled.
+Production must keep demo auth off. ASU SSO is **not** implemented. See `docs/authentication.md`.
 
 ## Authorization model
 

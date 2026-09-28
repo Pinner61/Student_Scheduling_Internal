@@ -29,6 +29,7 @@ export function ExceptionForm({ recurring }: ExceptionFormProps) {
     const draft: ScheduleException = {
       id: "preview",
       userId: "self",
+      schedulePeriodId: "preview",
       exceptionDate,
       startTime,
       endTime,

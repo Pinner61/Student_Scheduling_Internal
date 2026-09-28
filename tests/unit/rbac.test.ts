@@ -25,6 +25,7 @@ const admin: SessionUser = {
 describe("RBAC", () => {
   it("allows students to manage their own availability but not users", () => {
     expect(hasPermission(student, "write:own_availability")).toBe(true);
+    expect(hasPermission(student, "submit:own_schedule")).toBe(true);
     expect(hasPermission(student, "write:users")).toBe(false);
     expect(hasPermission(student, "review:exceptions")).toBe(false);
   });
@@ -37,7 +38,7 @@ describe("RBAC", () => {
   });
 
   it("rejects unauthorized actions", () => {
-    expect(() => requirePermission(student, "write:users")).toThrow("Unauthorized");
+    expect(() => requirePermission(student, "write:users")).toThrow(/permission/);
     expect(hasPermission(admin, "write:users")).toBe(true);
     expect(canAccessPath("administrator", "/admin/audit")).toBe(true);
     expect(canAccessPath("student", "/admin/users")).toBe(false);

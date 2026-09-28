@@ -22,10 +22,11 @@ test("student can view schedule, paint availability, share it, and submit an exc
   page,
 }) => {
   await signIn(page, "Student");
-  await expect(page.getByRole("heading", { name: "Your Schedule" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Schedule$/ })).toBeVisible();
   await expect(page.getByText(/Approved exceptions overlay your normal weekly availability/)).toBeVisible();
-  await page.getByRole("link", { name: "Edit Weekly Availability" }).click();
-  await expect(page.getByRole("heading", { name: "Edit Weekly Availability" })).toBeVisible();
+  await page.getByRole("button", { name: "Edit Schedule" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Edit Schedule" }).click();
+  await expect(page.getByRole("heading", { name: /Weekly Availability/ })).toBeVisible();
   await page.getByRole("button", { name: "Office", exact: true }).click();
   await page.getByRole("button", { name: /Tuesday 2:00 PM/ }).click();
   await expect(page.getByRole("status")).toContainText("unsaved changes");

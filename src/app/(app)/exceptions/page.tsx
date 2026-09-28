@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { getSessionUser } from "@/lib/auth/session";
-import { getAvailability, getExceptions, getUser } from "@/lib/services/data-service";
+import { getAvailability, getExceptions, getUser, getCurrentPeriod } from "@/lib/services/data-service";
 import { ExceptionForm } from "@/features/exceptions/exception-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ExceptionStatusBadge } from "@/components/schedule/exception-status-badge";
@@ -10,6 +10,7 @@ import { formatTimeRange } from "@/lib/utils/time";
 import { EmptyState } from "@/components/ui/empty-state";
 import { studentVisibleExceptions } from "@/lib/schedule/exceptions";
 import { EXCEPTION_TYPE_LABEL } from "@/components/schedule/schedule-language";
+import { canCreateException } from "@/lib/schedule/periods";
 import type { ScheduleException } from "@/types";
 
 function ExceptionListItem({
@@ -55,6 +56,7 @@ export default async function ExceptionsPage() {
   const user = await getSessionUser();
   if (!user) return null;
 
+  const period = getCurrentPeriod();
   const visible = studentVisibleExceptions(getExceptions(user.id)).sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt)
   );
@@ -72,7 +74,14 @@ export default async function ExceptionsPage() {
         </p>
       </div>
 
-      <ExceptionForm recurring={getAvailability(user.id)} />
+      {period && canCreateException(period) ? (
+        <ExceptionForm recurring={getAvailability(user.id)} />
+      ) : (
+        <p className="text-sm" role="status">
+          Exception requests are not available while this schedule period is{" "}
+          {period?.status.toLowerCase() ?? "unavailable"}.
+        </p>
+      )}
 
       <Card>
         <CardHeader>

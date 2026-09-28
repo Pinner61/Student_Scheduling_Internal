@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { authenticateDemo } from "@/lib/demo/store";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
 import { getRoleHomePath } from "@/lib/auth/rbac";
-import { isDemoMode } from "@/lib/config";
+import { isDemoAuthEnabled } from "@/lib/config";
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
@@ -14,8 +14,8 @@ export async function loginAction(formData: FormData) {
   if (!email || !password) {
     return { error: "Email and password required" };
   }
-  if (!isDemoMode()) {
-    return { error: "Configure Supabase auth for production login" };
+  if (!isDemoAuthEnabled()) {
+    return { error: "Demo sign-in is disabled in this environment." };
   }
 
   const profile = authenticateDemo(email, password);

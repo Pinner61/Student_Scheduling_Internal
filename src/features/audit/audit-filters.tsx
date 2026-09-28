@@ -3,9 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import type { UserWithTeam } from "@/types";
+import type { Team, UserWithTeam } from "@/types";
 
-export function AuditFilters({ users }: { users: UserWithTeam[] }) {
+export function AuditFilters({ users, teams = [] }: { users: UserWithTeam[]; teams?: Team[] }) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -32,6 +32,32 @@ export function AuditFilters({ users }: { users: UserWithTeam[] }) {
         ))}
       </Select>
       <Select
+        aria-label="Filter by target user"
+        defaultValue={params.get("target") ?? "all"}
+        onChange={(e) => update("target", e.target.value)}
+        className="w-auto min-w-[180px]"
+      >
+        <option value="all">All target users</option>
+        {users.map((u) => (
+          <option key={`target-${u.id}`} value={u.id}>
+            {u.firstName} {u.lastName}
+          </option>
+        ))}
+      </Select>
+      <Select
+        aria-label="Filter by team"
+        defaultValue={params.get("team") ?? "all"}
+        onChange={(e) => update("team", e.target.value)}
+        className="w-auto min-w-[160px]"
+      >
+        <option value="all">All teams</option>
+        {teams.map((team) => (
+          <option key={team.id} value={team.id}>
+            {team.name}
+          </option>
+        ))}
+      </Select>
+      <Select
         aria-label="Filter by action"
         defaultValue={params.get("action") ?? "all"}
         onChange={(e) => update("action", e.target.value)}
@@ -48,6 +74,13 @@ export function AuditFilters({ users }: { users: UserWithTeam[] }) {
         <option value="user_deactivated">User deactivated</option>
         <option value="user_reactivated">User reactivated</option>
         <option value="settings_changed">Settings changed</option>
+        <option value="schedule_submitted">Schedule submitted</option>
+        <option value="schedule_reopened">Schedule reopened</option>
+        <option value="schedule_period_opened">Period opened</option>
+        <option value="schedule_period_closed">Period closed</option>
+        <option value="schedule_period_archived">Period archived</option>
+        <option value="users_imported">Users imported</option>
+        <option value="supervisor_assignment_changed">Supervisor assignment changed</option>
       </Select>
       <Select
         aria-label="Filter by entity type"
@@ -61,6 +94,8 @@ export function AuditFilters({ users }: { users: UserWithTeam[] }) {
         <option value="recurring_availability">Availability</option>
         <option value="team">Team</option>
         <option value="settings">Settings</option>
+        <option value="schedule_period">Schedule period</option>
+        <option value="schedule_submission">Schedule submission</option>
       </Select>
       <Input
         type="date"

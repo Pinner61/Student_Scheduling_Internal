@@ -1,8 +1,13 @@
+import { logger } from "@/lib/logging/logger";
+import { sendEmailNotification } from "./email";
+
 export type NotificationEventName =
   | "exception_submitted"
   | "exception_approved"
   | "exception_declined"
   | "schedule_changed"
+  | "schedule_submitted"
+  | "period_opened"
   | "missing_schedule_reminder";
 
 export interface NotificationEvent {
@@ -15,13 +20,20 @@ export interface NotificationChannel {
   send(event: NotificationEvent): Promise<void> | void;
 }
 
-class InAppNotificationChannel implements NotificationChannel {
-  send(): void {
-    // In-app feedback is currently delivered through toasts at the UI layer.
+class EmailNotificationChannel implements NotificationChannel {
+  async send(event: NotificationEvent): Promise<void> {
+    try {
+      await sendEmailNotification(event);
+    } catch (error) {
+      logger.error("notification_email_failed", {
+        name: event.name,
+        message: error instanceof Error ? error.message : "unknown",
+      });
+    }
   }
 }
 
-const channels: NotificationChannel[] = [new InAppNotificationChannel()];
+const channels: NotificationChannel[] = [new EmailNotificationChannel()];
 
 export function registerNotificationChannel(channel: NotificationChannel): void {
   channels.push(channel);

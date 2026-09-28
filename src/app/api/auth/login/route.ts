@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateDemo } from "@/lib/demo/store";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
 import { getRoleHomePath } from "@/lib/auth/rbac";
-import { isDemoMode } from "@/lib/config";
+import { isDemoAuthEnabled } from "@/lib/config";
 
 export async function POST(request: Request) {
   const { email, password } = await request.json();
@@ -11,10 +11,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 });
   }
 
-  if (!isDemoMode()) {
+  if (!isDemoAuthEnabled()) {
     return NextResponse.json(
-      { error: "Configure Supabase auth for production login" },
-      { status: 501 }
+      { error: "Demo sign-in is disabled in this environment." },
+      { status: 403 }
     );
   }
 
