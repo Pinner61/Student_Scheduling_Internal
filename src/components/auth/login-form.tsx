@@ -57,7 +57,7 @@ export function LoginForm({
               <CardHeader>
                 <CardTitle className="text-base">Demo accounts</CardTitle>
                 <CardDescription>
-                  Development only. Disabled unless ENABLE_DEMO_AUTH is explicitly turned on.
+                  Seeded review accounts. Shown only when ENABLE_DEMO_AUTH is on.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
