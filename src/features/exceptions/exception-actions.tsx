@@ -1,8 +1,16 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   reviewExceptionAction,
   cancelExceptionAction,
@@ -15,6 +23,8 @@ interface ExceptionActionsProps {
 
 export function ExceptionActions({ exceptionId, action }: ExceptionActionsProps) {
   const [pending, startTransition] = useTransition();
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [reason, setReason] = useState("");
 
   function run(fn: () => Promise<{ error?: string; success?: boolean } | void>, successMsg: string) {
     startTransition(async () => {
@@ -23,6 +33,8 @@ export function ExceptionActions({ exceptionId, action }: ExceptionActionsProps)
         toast.error(result.error);
       } else {
         toast.success(successMsg);
+        setRejectOpen(false);
+        setReason("");
       }
     });
   }
@@ -35,7 +47,7 @@ export function ExceptionActions({ exceptionId, action }: ExceptionActionsProps)
         disabled={pending}
         onClick={() => run(() => cancelExceptionAction(exceptionId), "Exception cancelled")}
       >
-        Cancel
+        Cancel request
       </Button>
     );
   }
@@ -55,16 +67,49 @@ export function ExceptionActions({ exceptionId, action }: ExceptionActionsProps)
         variant="destructive"
         size="sm"
         disabled={pending}
-        onClick={() => {
-          const confirmed = window.confirm(
-            "Decline this exception? The student’s normal schedule will remain unchanged."
-          );
-          if (!confirmed) return;
-          run(() => reviewExceptionAction(exceptionId, "DECLINED"), "Exception declined");
-        }}
+        onClick={() => setRejectOpen(true)}
       >
-        Decline
+        Reject
       </Button>
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent onClose={() => setRejectOpen(false)}>
+          <DialogHeader>
+            <DialogTitle>Reject this exception?</DialogTitle>
+            <DialogDescription>
+              The student’s normal weekly availability will stay in place. Please explain why this
+              request is being rejected.
+            </DialogDescription>
+          </DialogHeader>
+          <label htmlFor={`reject-reason-${exceptionId}`} className="mb-1 block text-sm font-medium">
+            Reason / justification
+          </label>
+          <textarea
+            id={`reject-reason-${exceptionId}`}
+            className="min-h-24 w-full rounded-md border border-[var(--color-border)] px-3 py-2 text-sm"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            required
+            maxLength={500}
+          />
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setRejectOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={pending || reason.trim().length === 0}
+              onClick={() =>
+                run(
+                  () => reviewExceptionAction(exceptionId, "DECLINED", reason.trim()),
+                  "Exception rejected"
+                )
+              }
+            >
+              Reject request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

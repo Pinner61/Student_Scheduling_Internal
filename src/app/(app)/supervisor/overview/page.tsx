@@ -187,9 +187,9 @@ export default async function SupervisorOverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Team coverage thresholds</CardTitle>
+          <CardTitle>Assigned teams</CardTitle>
           <CardDescription>
-            Office: {settings.coverageThresholdOffice} · Remote: {settings.coverageThresholdRemote} · Total: {settings.coverageThresholdTotal}
+            Students you supervise, using the same schedules as Team Schedule and Find Availability.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -199,8 +199,9 @@ export default async function SupervisorOverviewPage() {
               const officeSlots = coverage.reduce((s, c) => s + c.officeCount, 0);
               const remoteSlots = coverage.reduce((s, c) => s + c.remoteCount, 0);
               const belowThreshold =
-                officeSlots < settings.coverageThresholdOffice ||
-                remoteSlots < settings.coverageThresholdRemote;
+                settings.coverageThresholdsEnabled &&
+                (officeSlots < settings.coverageThresholdOffice ||
+                  remoteSlots < settings.coverageThresholdRemote);
               return (
                 <div
                   key={team.id}
@@ -219,6 +220,14 @@ export default async function SupervisorOverviewPage() {
               );
             })}
           </div>
+          {settings.coverageThresholdsEnabled && (
+            <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">
+              Coverage thresholds are optional minimums for Office and Remote blocks during the
+              selected day (Office {settings.coverageThresholdOffice}, Remote{" "}
+              {settings.coverageThresholdRemote}, Total {settings.coverageThresholdTotal}). Creative
+              Strategy does not use these by default.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

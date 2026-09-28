@@ -186,3 +186,7 @@ export function addDaysToDateString(date: string, days: number): string {
   const parsed = parse(`${date} 12:00`, "yyyy-MM-dd HH:mm", new Date());
   return format(addDays(parsed, days), "yyyy-MM-dd", { locale: enUS });
 }
+
+export function weekdayDatesFromWeekStart(weekStart: string): string[] {
+  return Array.from({ length: 5 }, (_, i) => addDaysToDateString(weekStart, i));
+}

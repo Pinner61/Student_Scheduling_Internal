@@ -57,6 +57,32 @@ describe("data service authorization and workflows", () => {
     expect(exception.status).toBe("PENDING");
   });
 
+  it("requires a rejection reason and stores the review details", () => {
+    const student = asSession("alex.chen@asu.edu");
+    const supervisor = asSession("smitchell@asu.edu");
+    const exception = submitException(student, {
+      exceptionDate: "2026-09-24",
+      startTime: "13:00",
+      endTime: "15:00",
+      exceptionType: "UNAVAILABLE",
+      replacementMode: null,
+      reason: "Appointment",
+    });
+    expect(() => reviewExceptionRequest(supervisor, exception.id, "DECLINED")).toThrow(
+      "A rejection reason is required."
+    );
+    const reviewed = reviewExceptionRequest(
+      supervisor,
+      exception.id,
+      "DECLINED",
+      "Office coverage is required."
+    );
+    expect(reviewed?.status).toBe("DECLINED");
+    expect(reviewed?.reviewNote).toBe("Office coverage is required.");
+    expect(reviewed?.reviewedBy).toBe(supervisor.id);
+    expect(reviewed?.reviewedAt).toBeTruthy();
+  });
+
   it("lets a supervisor approve an exception and updates effective schedule", () => {
     const student = asSession("alex.chen@asu.edu");
     const supervisor = asSession("smitchell@asu.edu");

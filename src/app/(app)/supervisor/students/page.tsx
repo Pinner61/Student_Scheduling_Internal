@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth/session";
-import { getSupervisorTeams, getTeamMembers } from "@/lib/services/data-service";
-import { getUser } from "@/lib/services/data-service";
+import {
+  getSupervisorTeams,
+  getTeamMembers,
+  getUser,
+  getExceptions,
+} from "@/lib/services/data-service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { scheduleStatusLabel } from "@/components/schedule/schedule-language";
 
 export default async function SupervisorStudentsPage() {
   const user = await getSessionUser();
@@ -34,6 +39,10 @@ export default async function SupervisorStudentsPage() {
                 <ul className="divide-y">
                   {members.map((member) => {
                     const details = getUser(member.id);
+                    const pendingCount = getExceptions(member.id).filter(
+                      (e) => e.status === "PENDING"
+                    ).length;
+                    const submitted = details?.scheduleStatus === "submitted";
                     return (
                       <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                         <div>
@@ -45,21 +54,19 @@ export default async function SupervisorStudentsPage() {
                           </Link>
                           <p className="text-sm text-[var(--color-muted-foreground)]">{member.email}</p>
                         </div>
-                        <Badge
-                          variant={
-                            details?.scheduleStatus === "complete"
-                              ? "success"
-                              : details?.scheduleStatus === "incomplete"
-                                ? "warning"
-                                : "danger"
-                          }
-                        >
-                          {details?.scheduleStatus === "complete"
-                            ? "Schedule complete"
-                            : details?.scheduleStatus === "incomplete"
-                              ? "Incomplete"
-                              : "Not started"}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={submitted ? "success" : "neutral"}>
+                            {details ? scheduleStatusLabel(details.scheduleStatus) : "No schedule submitted"}
+                          </Badge>
+                          {pendingCount > 0 && (
+                            <Link
+                              href={`/supervisor/exceptions?status=PENDING&student=${member.id}`}
+                              className="text-sm font-medium text-amber-800 underline-offset-2 hover:underline"
+                            >
+                              {pendingCount} pending exception{pendingCount === 1 ? "" : "s"}
+                            </Link>
+                          )}
+                        </div>
                       </li>
                     );
                   })}

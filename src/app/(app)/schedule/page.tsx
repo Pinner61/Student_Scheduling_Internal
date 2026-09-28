@@ -23,7 +23,7 @@ import { WeekScheduleGrid } from "@/components/schedule/week-schedule-grid";
 import { WorkModeBadge } from "@/components/schedule/work-mode-badge";
 import { formatTimeRange, formatWeekRange, formatLongWeekday } from "@/lib/utils/time";
 import { EXCEPTION_TYPE_LABEL } from "@/components/schedule/schedule-language";
-import { CopyAvailabilityButton } from "@/features/availability/copy-availability-button";
+import { ShareAvailabilityButton } from "@/features/availability/share-availability-button";
 
 export default async function ScheduleHomePage() {
   const user = await getSessionUser();
@@ -31,6 +31,7 @@ export default async function ScheduleHomePage() {
 
   const weekStart = getCurrentWeekStart();
   const exceptions = getExceptions(user.id);
+  const approvedExceptions = exceptions.filter((e) => e.status === "APPROVED");
   const weekSchedule = getEffectiveWeekSchedule(user.id, weekStart);
   const today = getTodayDateString();
   const nowTime = getNowTimeString();
@@ -44,15 +45,9 @@ export default async function ScheduleHomePage() {
     format(addDays(parseISO(weekStart), i), "yyyy-MM-dd")
   );
 
-  const todayHasException = exceptions.some(
-    (e) => e.exceptionDate === today && e.status === "APPROVED"
-  );
-  const upcomingExceptions = exceptions
-    .filter(
-      (e) =>
-        e.exceptionDate >= today &&
-        (e.status === "PENDING" || e.status === "APPROVED")
-    )
+  const todayHasException = approvedExceptions.some((e) => e.exceptionDate === today);
+  const upcomingExceptions = approvedExceptions
+    .filter((e) => e.exceptionDate >= today)
     .sort((a, b) => a.exceptionDate.localeCompare(b.exceptionDate))
     .slice(0, 4);
 
@@ -66,7 +61,7 @@ export default async function ScheduleHomePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <CopyAvailabilityButton ranges={recurring} />
+          <ShareAvailabilityButton ranges={recurring} />
           <Link href="/availability" className={buttonVariants({ size: "lg" })}>
             Edit Weekly Availability
           </Link>
@@ -78,7 +73,7 @@ export default async function ScheduleHomePage() {
           <CardTitle>Today</CardTitle>
           <CardDescription>
             {formatLongWeekday(today)}
-            {todayHasException ? " · Schedule adjusted by an exception" : ""}
+            {todayHasException ? " · Schedule adjusted by an approved exception" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -109,10 +104,11 @@ export default async function ScheduleHomePage() {
         <CardHeader>
           <CardTitle>This week</CardTitle>
           <CardDescription>
-            Office and Remote blocks include approved exceptions. Empty time is unavailable.
+            Approved exceptions overlay your normal weekly availability. Pending requests stay on the
+            Exceptions page until a supervisor reviews them.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <WeekScheduleGrid
             weekDates={weekDates}
             scheduleByDate={weekSchedule}
@@ -120,16 +116,21 @@ export default async function ScheduleHomePage() {
             workingDayEnd={settings.workingDayEnd}
             intervalMinutes={settings.schedulingIntervalMinutes}
             today={today}
+            approvedExceptions={approvedExceptions}
           />
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            Striped amber blocks are approved unavailability. An amber outline marks an approved mode
+            change. Empty time is unavailable.
+          </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Upcoming changes</CardTitle>
+            <CardTitle>Approved changes this week</CardTitle>
             <CardDescription>
-              Exceptions temporarily override your normal weekly availability for a specific date.
+              Only approved exceptions appear here and on the weekly schedule.
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -144,7 +145,8 @@ export default async function ScheduleHomePage() {
         <CardContent>
           {upcomingExceptions.length === 0 ? (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              No upcoming exceptions. Add one if next week’s plan is different from your normal hours.
+              No approved upcoming exceptions. Pending requests appear under Exceptions → Pending
+              Supervisor Approval.
             </p>
           ) : (
             <ul className="space-y-2">

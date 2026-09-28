@@ -8,7 +8,7 @@ export type ExceptionType =
   | "ALTERNATE_AVAILABILITY";
 export type ExceptionStatus = "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED";
 export type TeamStatus = "active" | "archived";
-export type ScheduleStatus = "complete" | "incomplete" | "not_started";
+export type ScheduleStatus = "submitted" | "not_started";
 export type AuditAction =
   | "availability_changed"
   | "exception_submitted"
@@ -132,6 +132,7 @@ export interface AppSettings {
   workingDayEnd: string;
   schedulingIntervalMinutes: number;
   timezone: string;
+  coverageThresholdsEnabled: boolean;
   coverageThresholdOffice: number;
   coverageThresholdRemote: number;
   coverageThresholdTotal: number;
@@ -143,6 +144,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   workingDayEnd: "18:00",
   schedulingIntervalMinutes: 30,
   timezone: "America/Phoenix",
+  coverageThresholdsEnabled: false,
   coverageThresholdOffice: 2,
   coverageThresholdRemote: 1,
   coverageThresholdTotal: 3,

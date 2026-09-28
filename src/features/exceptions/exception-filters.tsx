@@ -33,7 +33,7 @@ export function ExceptionFilters({ teams, students, basePath }: ExceptionFilters
         <option value="all">All statuses</option>
         <option value="PENDING">Pending</option>
         <option value="APPROVED">Approved</option>
-        <option value="DECLINED">Declined</option>
+        <option value="DECLINED">Rejected</option>
         <option value="CANCELLED">Cancelled</option>
       </Select>
       <Select

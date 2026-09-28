@@ -21,6 +21,7 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
         workingDayEnd: form.get("workingDayEnd") as string,
         schedulingIntervalMinutes: Number(form.get("schedulingIntervalMinutes")),
         timezone: form.get("timezone") as string,
+        coverageThresholdsEnabled: form.get("coverageThresholdsEnabled") === "true",
         coverageThresholdOffice: Number(form.get("coverageThresholdOffice")),
         coverageThresholdRemote: Number(form.get("coverageThresholdRemote")),
         coverageThresholdTotal: Number(form.get("coverageThresholdTotal")),
@@ -91,6 +92,24 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
               ASU operations use America/Phoenix. Stored schedules do not follow the browser timezone.
             </p>
           </div>
+          <div className="sm:col-span-2 rounded-md border border-[var(--color-border)] bg-[var(--color-muted)]/40 p-4">
+            <label htmlFor="coverageThresholdsEnabled" className="mb-1 block text-sm font-medium">
+              Coverage thresholds
+            </label>
+            <Select
+              id="coverageThresholdsEnabled"
+              name="coverageThresholdsEnabled"
+              defaultValue={settings.coverageThresholdsEnabled ? "true" : "false"}
+            >
+              <option value="false">Off (default for Creative Strategy)</option>
+              <option value="true">On — show staffing threshold indicators</option>
+            </Select>
+            <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+              Optional minimums for how many Office or Remote blocks should appear on a given day.
+              Leave this off unless a team has an explicit coverage requirement. It does not block
+              scheduling.
+            </p>
+          </div>
           <div>
             <label htmlFor="coverageThresholdOffice" className="mb-1 block text-sm font-medium">
               Office coverage threshold
@@ -104,7 +123,8 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
               required
             />
             <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-              Used as a visual indicator on coverage views. It does not automatically flag a staffing problem.
+              Used only when coverage thresholds are on. It is a visual indicator, not an automatic
+              staffing problem.
             </p>
           </div>
           <div>

@@ -3,7 +3,6 @@ import {
   cellMapToRanges,
   formatWeeklyAvailabilityCopy,
   rangesToCellMap,
-  copyDayToDays,
   cellKey,
 } from "@/lib/schedule/cells";
 import { generateSlotStarts } from "@/lib/utils/time";
@@ -24,21 +23,14 @@ describe("availability cells", () => {
     expect(back).toEqual(ranges);
   });
 
-  it("formats a copy-paste weekly summary", () => {
+  it("formats a shareable weekly summary", () => {
     const text = formatWeeklyAvailabilityCopy([
-      { dayOfWeek: 1, startTime: "10:00", endTime: "13:00", workMode: "OFFICE" },
+      { dayOfWeek: 1, startTime: "09:00", endTime: "12:00", workMode: "OFFICE" },
+      { dayOfWeek: 1, startTime: "13:00", endTime: "16:00", workMode: "REMOTE" },
     ]);
-    expect(text).toContain("Monday: 10:00 AM–1:00 PM Office");
-    expect(text).toContain("Tuesday: Unavailable");
-  });
-
-  it("copies a day onto other days", () => {
-    const map = rangesToCellMap(
-      [{ dayOfWeek: 1, startTime: "09:00", endTime: "10:00", workMode: "OFFICE" }],
-      slots,
-      30
-    );
-    const copied = copyDayToDays(map, 1, [2], slots);
-    expect(copied[cellKey(2, "09:00")]).toBe("OFFICE");
+    expect(text).toContain("Monday");
+    expect(text).toContain("Office: 9:00 AM–12:00 PM");
+    expect(text).toContain("Remote: 1:00 PM–4:00 PM");
+    expect(text).toContain("Tuesday\nUnavailable");
   });
 });

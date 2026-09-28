@@ -15,6 +15,7 @@ import {
   changeUserRoleAction,
   changeUserTeamAction,
 } from "@/app/actions/scheduling";
+import { scheduleStatusLabel } from "@/components/schedule/schedule-language";
 
 interface UserDetailPanelProps {
   user: UserWithTeam;
@@ -38,10 +39,11 @@ export function UserDetailPanel({ user, onClose, teams = [] }: UserDetailPanelPr
             <span className="font-medium">Email:</span> {user.email}
           </p>
           <p>
-            <span className="font-medium">Status:</span> {user.status}
+            <span className="font-medium">Account Status:</span>{" "}
+            {user.status === "active" ? "Active" : "Inactive"}
           </p>
           <p>
-            <span className="font-medium">Schedule status:</span> {user.scheduleStatus}
+            <span className="font-medium">Schedule:</span> {scheduleStatusLabel(user.scheduleStatus)}
           </p>
 
           <div>

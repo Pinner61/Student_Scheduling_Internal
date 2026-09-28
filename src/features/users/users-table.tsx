@@ -22,6 +22,7 @@ import {
 } from "@/app/actions/scheduling";
 import { UserDetailPanel } from "./user-detail-panel";
 import Link from "next/link";
+import { scheduleStatusLabel } from "@/components/schedule/schedule-language";
 
 interface UsersTableProps {
   users: UserWithTeam[];
@@ -88,20 +89,14 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
                 <td className="px-4 py-3">{user.teamName ?? "—"}</td>
                 <td className="px-4 py-3">
                   <Badge variant={user.status === "active" ? "success" : "neutral"}>
-                    {user.status}
+                    {user.status === "active" ? "Active" : "Inactive"}
                   </Badge>
                 </td>
                 <td className="px-4 py-3">
                   <Badge
-                    variant={
-                      user.scheduleStatus === "complete"
-                        ? "success"
-                        : user.scheduleStatus === "incomplete"
-                          ? "warning"
-                          : "danger"
-                    }
+                    variant={user.scheduleStatus === "submitted" ? "success" : "neutral"}
                   >
-                    {user.scheduleStatus.replace("_", " ")}
+                    {scheduleStatusLabel(user.scheduleStatus)}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-[var(--color-muted-foreground)]">

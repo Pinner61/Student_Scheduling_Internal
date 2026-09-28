@@ -80,7 +80,7 @@ export default async function SupervisorExceptionsPage({ searchParams }: PagePro
 
       {exceptions.length === 0 ? (
         <EmptyState
-          title="No pending exceptions"
+          title="No exceptions match these filters"
           description="New student requests will appear here."
         />
       ) : (

@@ -1,8 +1,13 @@
-import type { ScheduleBlock } from "@/types";
+import type { ScheduleBlock, ScheduleException } from "@/types";
 import { cn } from "@/lib/utils/cn";
 import { formatTime12, generateSlotStarts, getShortDayName, minutesToTime, timeToMinutes } from "@/lib/utils/time";
 import { WEEKDAYS } from "@/lib/schedule/cells";
-import { workModeCellClass, workModeLabel } from "@/components/schedule/schedule-language";
+import { exceptionCoveringSlot } from "@/lib/schedule/engine";
+import {
+  exceptionOverlayClass,
+  workModeCellClass,
+  workModeLabel,
+} from "@/components/schedule/schedule-language";
 
 interface WeekScheduleGridProps {
   weekDates: string[];
@@ -11,6 +16,7 @@ interface WeekScheduleGridProps {
   workingDayEnd: string;
   intervalMinutes?: number;
   today?: string;
+  approvedExceptions?: ScheduleException[];
 }
 
 function modeAt(blocks: ScheduleBlock[], slot: string, interval: number): ScheduleBlock | undefined {
@@ -27,12 +33,14 @@ export function WeekScheduleGrid({
   workingDayEnd,
   intervalMinutes = 30,
   today,
+  approvedExceptions = [],
 }: WeekScheduleGridProps) {
   const slots = generateSlotStarts(workingDayStart, workingDayEnd, intervalMinutes);
   const dates = weekDates.filter((d) => {
     const day = new Date(`${d}T12:00:00`).getDay();
     return WEEKDAYS.includes(day as (typeof WEEKDAYS)[number]);
   });
+  const officialExceptions = approvedExceptions.filter((e) => e.status === "APPROVED");
 
   return (
     <div className="overflow-x-auto rounded-lg border bg-white">
@@ -68,21 +76,40 @@ export function WeekScheduleGrid({
             </div>
             {dates.map((date) => {
               const block = modeAt(scheduleByDate.get(date) ?? [], slot, intervalMinutes);
+              const exception = exceptionCoveringSlot(officialExceptions, date, slot, intervalMinutes);
               const isStart = block && block.startTime === slot;
+              const exceptionStarts = exception && exception.startTime === slot;
+              const unavailableException = exception?.exceptionType === "UNAVAILABLE";
+              const label = unavailableException
+                ? exceptionStarts
+                  ? "Exception"
+                  : ""
+                : isStart
+                  ? workModeLabel(block.workMode)
+                  : block
+                    ? ""
+                    : "";
               return (
                 <div
                   key={`${date}-${slot}`}
                   className={cn(
                     "min-h-8 border-t border-l px-1 py-1 text-center text-[11px] font-medium",
-                    workModeCellClass(block?.workMode)
+                    unavailableException
+                      ? exceptionOverlayClass(true)
+                      : workModeCellClass(block?.workMode),
+                    exception && !unavailableException && exceptionOverlayClass(false)
                   )}
                   title={
-                    block
-                      ? `${workModeLabel(block.workMode)} ${formatTime12(block.startTime)}–${formatTime12(block.endTime)}`
-                      : "Unavailable"
+                    exception
+                      ? unavailableException
+                        ? `Approved exception · Unavailable ${formatTime12(exception.startTime)}–${formatTime12(exception.endTime)}`
+                        : `Approved exception · ${block ? workModeLabel(block.workMode) : "Updated"} ${formatTime12(exception.startTime)}–${formatTime12(exception.endTime)}`
+                      : block
+                        ? `${workModeLabel(block.workMode)} ${formatTime12(block.startTime)}–${formatTime12(block.endTime)}`
+                        : "Unavailable"
                   }
                 >
-                  {isStart ? workModeLabel(block.workMode) : block ? "" : ""}
+                  {label}
                 </div>
               );
             })}

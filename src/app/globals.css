@@ -40,7 +40,18 @@ body {
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
 }
 
-:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+@keyframes cell-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+  35% {
+    transform: scale(0.96);
+    box-shadow: inset 0 0 0 2px var(--ring);
+  }
+}
+
+.animate-cell-pulse {
+  animation: cell-pulse 280ms ease;
 }
