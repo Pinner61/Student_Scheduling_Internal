@@ -16,9 +16,10 @@ import { createUserAction } from "@/app/actions/scheduling";
 
 interface CreateUserFormProps {
   teams: { id: string; name: string }[];
+  supervisors?: { id: string; name: string }[];
 }
 
-export function CreateUserForm({ teams }: CreateUserFormProps) {
+export function CreateUserForm({ teams, supervisors = [] }: CreateUserFormProps) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -26,13 +27,18 @@ export function CreateUserForm({ teams }: CreateUserFormProps) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     startTransition(async () => {
-      await createUserAction({
+      const result = await createUserAction({
         firstName: form.get("firstName") as string,
         lastName: form.get("lastName") as string,
         email: form.get("email") as string,
         role: form.get("role") as "student" | "supervisor" | "administrator",
         teamId: (form.get("teamId") as string) || null,
+        supervisorId: (form.get("supervisorId") as string) || null,
       });
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
       toast.success("User created");
       setOpen(false);
     });
@@ -90,6 +96,21 @@ export function CreateUserForm({ teams }: CreateUserFormProps) {
                 ))}
               </Select>
             </div>
+            {supervisors.length > 0 && (
+              <div>
+                <label htmlFor="supervisorId" className="mb-1 block text-sm font-medium">
+                  Supervisor
+                </label>
+                <Select id="supervisorId" name="supervisorId" defaultValue="">
+                  <option value="">Use the selected team’s supervisor</option>
+                  {supervisors.map((supervisor) => (
+                    <option key={supervisor.id} value={supervisor.id}>
+                      {supervisor.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
                 Cancel

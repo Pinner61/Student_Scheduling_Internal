@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { getAuditLogs, listUsers } from "@/lib/services/data-service";
+import { getAuditLogs, listUsers, listTeams } from "@/lib/services/data-service";
+import { getSessionUser } from "@/lib/auth/session";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AuditFilters } from "@/features/audit/audit-filters";
@@ -11,6 +12,8 @@ interface PageProps {
     action?: string;
     entityType?: string;
     user?: string;
+    target?: string;
+    team?: string;
     from?: string;
     to?: string;
   }>;
@@ -18,11 +21,16 @@ interface PageProps {
 
 export default async function AdminAuditPage({ searchParams }: PageProps) {
   const params = await searchParams;
+  const session = await getSessionUser();
+  if (!session) return null;
   const users = listUsers();
-  const logs = getAuditLogs({
+  const teams = listTeams();
+  const logs = getAuditLogs(session, {
     action: params.action,
     entityType: params.entityType,
     userId: params.user,
+    targetUserId: params.target,
+    teamId: params.team,
     from: params.from,
     to: params.to,
   });
@@ -39,7 +47,7 @@ export default async function AdminAuditPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<Skeleton className="h-10 w-full" />}>
-        <AuditFilters users={users} />
+        <AuditFilters users={users} teams={teams} />
       </Suspense>
 
       {logs.length === 0 ? (

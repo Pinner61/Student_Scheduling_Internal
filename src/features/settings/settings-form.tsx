@@ -25,7 +25,8 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
         coverageThresholdOffice: Number(form.get("coverageThresholdOffice")),
         coverageThresholdRemote: Number(form.get("coverageThresholdRemote")),
         coverageThresholdTotal: Number(form.get("coverageThresholdTotal")),
-        exceptionApprovalRequired: form.get("exceptionApprovalRequired") === "true",
+          exceptionApprovalRequired: form.get("exceptionApprovalRequired") === "true",
+          notifyStudentsOnPeriodOpen: form.get("notifyStudentsOnPeriodOpen") === "true",
       });
       if (result.success) toast.success("Settings saved");
     });
@@ -163,6 +164,19 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
               defaultValue={settings.exceptionApprovalRequired ? "true" : "false"}
             >
               <option value="true">Yes</option>
+              <option value="false">No</option>
+            </Select>
+          </div>
+          <div>
+            <label htmlFor="notifyStudentsOnPeriodOpen" className="mb-1 block text-sm font-medium">
+              Notify students when a period opens
+            </label>
+            <Select
+              id="notifyStudentsOnPeriodOpen"
+              name="notifyStudentsOnPeriodOpen"
+              defaultValue={settings.notifyStudentsOnPeriodOpen ? "true" : "false"}
+            >
+              <option value="true">Yes — in-app notification</option>
               <option value="false">No</option>
             </Select>
           </div>

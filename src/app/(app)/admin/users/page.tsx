@@ -2,7 +2,10 @@ import { Suspense } from "react";
 import { listUsers, listTeams } from "@/lib/services/data-service";
 import { UsersTable } from "@/features/users/users-table";
 import { UsersFilters } from "@/features/users/users-filters";
-import { CreateUserForm } from "@/features/users/create-user-form";
+import { CsvImportForm } from "@/features/users/csv-import-form";
+import { InviteUserForm } from "@/features/users/invite-user-form";
+import { listUserInvitations } from "@/lib/auth/service";
+import { hydrateAuthStateFromDatabase } from "@/lib/auth/persist";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageProps {
@@ -16,6 +19,7 @@ interface PageProps {
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
   const params = await searchParams;
+  await hydrateAuthStateFromDatabase();
   const users = listUsers({
     search: params.search,
     role: params.role,
@@ -23,6 +27,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     status: params.status,
   });
   const teams = listTeams();
+  const invitations = listUserInvitations();
+  const supervisors = listUsers({ role: "supervisor", status: "active" }).map((user) => ({
+    id: user.id,
+    name: `${user.firstName} ${user.lastName}`,
+  }));
 
   return (
     <div className="space-y-6">
@@ -33,14 +42,17 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
             Manage student employees, supervisors, and administrators
           </p>
         </div>
-        <CreateUserForm teams={teams.map((t) => ({ id: t.id, name: t.name }))} />
+        <div className="flex flex-wrap gap-2">
+          <CsvImportForm />
+          <InviteUserForm teams={teams.map((t) => ({ id: t.id, name: t.name }))} />
+        </div>
       </div>
 
       <Suspense fallback={<Skeleton className="h-10 w-full max-w-2xl" />}>
         <UsersFilters teams={teams} />
       </Suspense>
 
-      <UsersTable users={users} teams={teams.map((t) => ({ id: t.id, name: t.name }))} />
+      <UsersTable users={users} teams={teams} supervisors={supervisors} invitations={invitations} />
     </div>
   );
 }

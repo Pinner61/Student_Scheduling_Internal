@@ -1,48 +1,37 @@
 import { NextResponse } from "next/server";
-import { authenticateDemo } from "@/lib/demo/store";
-import { SESSION_COOKIE } from "@/lib/auth/constants";
+import { signInWithPassword } from "@/lib/auth/service";
+import { SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth/cookies";
 import { getRoleHomePath } from "@/lib/auth/rbac";
-import { isDemoMode } from "@/lib/config";
+import { toSessionUser } from "@/lib/auth/session";
+import { loginSchema } from "@/lib/validations/auth";
+import { toUserFacingError } from "@/lib/errors";
+import { persistProfile } from "@/lib/auth/persist";
+import { markLastLogin } from "@/lib/demo/store";
 
 export async function POST(request: Request) {
-  const { email, password } = await request.json();
-
-  if (!email || !password) {
-    return NextResponse.json({ error: "Email and password required" }, { status: 400 });
-  }
-
-  if (!isDemoMode()) {
+  const body = await request.json().catch(() => null);
+  const parsed = loginSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Configure Supabase auth for production login" },
-      { status: 501 }
+      { error: parsed.error.issues[0]?.message ?? "Email and password required" },
+      { status: 400 }
     );
   }
 
-  const profile = authenticateDemo(email, password);
-  if (!profile || profile.status === "inactive") {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  try {
+    const profile = await signInWithPassword(parsed.data.email, parsed.data.password);
+    markLastLogin(profile.id);
+    await persistProfile({ ...profile, lastLoginAt: new Date().toISOString() });
+    const response = NextResponse.json({
+      success: true,
+      redirect: getRoleHomePath(profile.role),
+    });
+    response.cookies.set(SESSION_COOKIE, JSON.stringify(toSessionUser(profile)), sessionCookieOptions());
+    return response;
+  } catch (error) {
+    return NextResponse.json(
+      { error: toUserFacingError(error, "Incorrect email or password.") },
+      { status: 401 }
+    );
   }
-
-  const sessionUser = {
-    id: profile.id,
-    email: profile.email,
-    role: profile.role,
-    firstName: profile.firstName,
-    lastName: profile.lastName,
-  };
-
-  const response = NextResponse.json({
-    success: true,
-    redirect: getRoleHomePath(profile.role),
-  });
-
-  response.cookies.set(SESSION_COOKIE, JSON.stringify(sessionUser), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
-
-  return response;
 }

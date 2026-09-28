@@ -4,6 +4,7 @@ import {
   getTeamCoverageData,
   getSettings,
   getExceptionsForTeam,
+  getCurrentPeriod,
 } from "@/lib/services/data-service";
 import {
   getTodayDateString,
@@ -25,6 +26,7 @@ export default async function SupervisorOverviewPage() {
   const today = getTodayDateString();
   const nowTime = getNowTimeString();
   const settings = getSettings();
+  const period = getCurrentPeriod();
 
   const allCoverage = teams.flatMap((team) => {
     const coverage = getTeamCoverageData(team.id, today);
@@ -73,7 +75,8 @@ export default async function SupervisorOverviewPage() {
       <div>
         <h1 className="text-2xl font-bold">Today’s team</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          {formatLongWeekdayYear(today)} · Who is working, where, and what needs attention
+          {formatLongWeekdayYear(today)}
+          {period ? ` · ${period.name}` : ""} · Who is working, where, and what needs attention
         </p>
       </div>
 

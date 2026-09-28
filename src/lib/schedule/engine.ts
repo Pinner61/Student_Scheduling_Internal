@@ -281,9 +281,9 @@ export function isCurrentlyWorking(blocks: ScheduleBlock[], nowTime: string): bo
 }
 
 export function getScheduleStatus(
-  recurring: RecurringAvailability[]
+  submissionStatus: "DRAFT" | "SUBMITTED" | null | undefined
 ): "submitted" | "not_started" {
-  return recurring.length === 0 ? "not_started" : "submitted";
+  return submissionStatus === "SUBMITTED" ? "submitted" : "not_started";
 }
 
 export function exceptionCoveringSlot(

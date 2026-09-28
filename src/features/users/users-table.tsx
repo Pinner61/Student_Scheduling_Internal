@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { UserWithTeam } from "@/types";
+import type { Invitation, UserWithTeam } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
@@ -15,25 +15,54 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   deactivateUserAction,
   reactivateUserAction,
   requestScheduleUpdateAction,
 } from "@/app/actions/scheduling";
+import { cancelInvitationAction, resendInvitationAction } from "@/app/actions/auth";
 import { UserDetailPanel } from "./user-detail-panel";
 import Link from "next/link";
 import { scheduleStatusLabel } from "@/components/schedule/schedule-language";
 
 interface UsersTableProps {
   users: UserWithTeam[];
-  teams?: { id: string; name: string }[];
+  teams?: { id: string; name: string; supervisorId?: string | null }[];
+  supervisors?: { id: string; name: string }[];
+  invitations?: Invitation[];
 }
 
-export function UsersTable({ users, teams = [] }: UsersTableProps) {
+function statusLabel(status: UserWithTeam["status"]) {
+  if (status === "active") return "Active";
+  if (status === "pending") return "Pending invitation";
+  return "Deactivated";
+}
+
+function statusVariant(status: UserWithTeam["status"]) {
+  if (status === "active") return "success" as const;
+  if (status === "pending") return "warning" as const;
+  return "neutral" as const;
+}
+
+export function UsersTable({
+  users,
+  teams = [],
+  supervisors = [],
+  invitations = [],
+}: UsersTableProps) {
   const router = useRouter();
   const [deactivateTarget, setDeactivateTarget] = useState<UserWithTeam | null>(null);
   const [detailUser, setDetailUser] = useState<UserWithTeam | null>(null);
+  const [inviteLink, setInviteLink] = useState("");
   const [pending, startTransition] = useTransition();
+
+  function invitationFor(userId: string) {
+    return invitations.find(
+      (invitation) =>
+        invitation.profileId === userId && !invitation.acceptedAt && !invitation.cancelledAt
+    );
+  }
 
   function confirmDeactivate() {
     if (!deactivateTarget) return;
@@ -88,9 +117,7 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
                 <td className="px-4 py-3 capitalize">{user.role}</td>
                 <td className="px-4 py-3">{user.teamName ?? "—"}</td>
                 <td className="px-4 py-3">
-                  <Badge variant={user.status === "active" ? "success" : "neutral"}>
-                    {user.status === "active" ? "Active" : "Inactive"}
-                  </Badge>
+                  <Badge variant={statusVariant(user.status)}>{statusLabel(user.status)}</Badge>
                 </td>
                 <td className="px-4 py-3">
                   <Badge
@@ -119,7 +146,13 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
                       View schedule
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setDetailUser(user)}>
-                      Edit user
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setDetailUser(user)}>
+                      Assign Team
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setDetailUser(user)}>
+                      Assign Supervisor
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => {
@@ -135,18 +168,59 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
                     >
                       Request schedule update
                     </DropdownMenuItem>
+                    {user.status === "pending" && invitationFor(user.id) ? (
+                      <>
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            const invitation = invitationFor(user.id);
+                            if (!invitation) return;
+                            startTransition(async () => {
+                              const result = await resendInvitationAction(invitation.id);
+                              if (result && "error" in result && result.error) {
+                                toast.error(result.error);
+                                return;
+                              }
+                              if (result && "activateUrl" in result && result.activateUrl) {
+                                setInviteLink(result.activateUrl);
+                                toast.success("Invitation reissued");
+                              }
+                            });
+                          }}
+                        >
+                          Resend invitation
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          destructive
+                          onSelect={() => {
+                            const invitation = invitationFor(user.id);
+                            if (!invitation) return;
+                            startTransition(async () => {
+                              const result = await cancelInvitationAction(invitation.id);
+                              if (result && "error" in result && result.error) {
+                                toast.error(result.error);
+                                return;
+                              }
+                              toast.success("Invitation cancelled");
+                              router.refresh();
+                            });
+                          }}
+                        >
+                          Cancel invitation
+                        </DropdownMenuItem>
+                      </>
+                    ) : null}
                     {user.status === "active" ? (
                       <DropdownMenuItem
                         destructive
                         onSelect={() => setDeactivateTarget(user)}
                       >
-                        Deactivate user
+                        Deactivate
                       </DropdownMenuItem>
-                    ) : (
+                    ) : user.status === "inactive" ? (
                       <DropdownMenuItem onSelect={() => setDeactivateTarget(user)}>
-                        Reactivate user
+                        Reactivate
                       </DropdownMenuItem>
-                    )}
+                    ) : null}
                   </DropdownMenu>
                 </td>
               </tr>
@@ -183,10 +257,36 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!inviteLink} onOpenChange={(open) => !open && setInviteLink("")}>
+        <DialogContent onClose={() => setInviteLink("")}>
+          <DialogHeader>
+            <DialogTitle>Invitation link</DialogTitle>
+            <DialogDescription>
+              Email delivery is not configured in this environment. Copy this link and send it securely.
+            </DialogDescription>
+          </DialogHeader>
+          <Input readOnly value={inviteLink} aria-label="Invitation link" />
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setInviteLink("")}>
+              Close
+            </Button>
+            <Button
+              onClick={async () => {
+                await navigator.clipboard.writeText(inviteLink);
+                toast.success("Invitation link copied");
+              }}
+            >
+              Copy invite link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {detailUser && (
         <UserDetailPanel
           user={detailUser}
           teams={teams}
+          supervisors={supervisors}
           onClose={() => setDetailUser(null)}
         />
       )}

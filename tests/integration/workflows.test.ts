@@ -8,6 +8,7 @@ import {
   getEffectiveSchedule,
   getUser,
   findAvailableStudents,
+  reopenSchedule,
 } from "@/lib/services/data-service";
 import type { SessionUser } from "@/types";
 
@@ -30,6 +31,7 @@ describe("data service authorization and workflows", () => {
 
   it("lets a student save availability", () => {
     const student = asSession("alex.chen@asu.edu");
+    reopenSchedule(student, student.id);
     const saved = saveAvailability(student, student.id, [
       {
         userId: student.id,
@@ -121,6 +123,6 @@ describe("data service authorization and workflows", () => {
 
   it("rejects unauthorized deactivation", () => {
     const student = asSession("alex.chen@asu.edu");
-    expect(() => deactivateUser(student, student.id)).toThrow("Unauthorized");
+    expect(() => deactivateUser(student, student.id)).toThrow(/permission/);
   });
 });

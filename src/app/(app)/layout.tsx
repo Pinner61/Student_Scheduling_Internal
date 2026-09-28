@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { AppShell } from "@/components/layout/app-shell";
+import { getNotifications } from "@/lib/services/data-service";
+import { isDevRoleSwitcherEnabled } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -10,5 +12,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect("/login");
   }
 
-  return <AppShell user={user}>{children}</AppShell>;
+  const notifications = getNotifications(user);
+  return (
+    <AppShell
+      user={user}
+      notifications={notifications}
+      showRoleSwitcher={isDevRoleSwitcherEnabled()}
+    >
+      {children}
+    </AppShell>
+  );
 }
