@@ -92,42 +92,14 @@ async function upsertAuthUser(email: string, password: string): Promise<string> 
   return data.user.id;
 }
 
-export async function signInWithPassword(email: string, password: string): Promise<Profile> {
-  await hydrateAuthStateFromDatabase();
-  const normalized = normalizeEmail(email);
-
-  if (isSupabaseConfigured()) {
-    const supabase = await tryCreateSupabaseServerClient();
-    if (!supabase) throw new AppError(AUTH_NOT_CONFIGURED_MESSAGE, "unavailable");
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: normalized,
-      password,
-    });
-    if (error || !data.user) {
-      logger.info("auth_login_failed", { email: normalized, message: error?.message });
-      throw new AppError(mapSupabaseAuthError(error?.message) || INVALID_CREDENTIALS_MESSAGE, "unauthorized");
-    }
-    const profile = getProfileByEmail(normalized);
-    if (!profile) {
-      await supabase.auth.signOut();
-      throw new AppError("This account is not set up for the scheduling application.", "unauthorized");
-    }
-    assertActiveProfileStatus(profile.status);
-    if (!profile.authUserId) {
-      setProfileAuthUserId(profile.id, data.user.id);
-      profile.authUserId = data.user.id;
-      await persistProfile(profile);
-    }
-    return profile;
-  }
-
+function signInWithDemoPassword(email: string, password: string): Profile {
   if (!isDemoAuthEnabled()) {
     throw new AppError(AUTH_NOT_CONFIGURED_MESSAGE, "unavailable");
   }
 
-  const profile = authenticateDemo(normalized, password);
+  const profile = authenticateDemo(email, password);
   if (!profile) {
-    const existing = getProfileByEmail(normalized);
+    const existing = getProfileByEmail(email);
     if (existing?.status === "inactive") {
       throw new AppError(ACCOUNT_DISABLED_MESSAGE, "unauthorized");
     }
@@ -138,6 +110,70 @@ export async function signInWithPassword(email: string, password: string): Promi
   }
   assertActiveProfileStatus(profile.status);
   return profile;
+}
+
+function isInvalidLoginMessage(message: string | undefined): boolean {
+  const value = (message ?? "").toLowerCase();
+  return !value || value.includes("invalid login") || value.includes("invalid credentials");
+}
+
+export async function signInWithPassword(email: string, password: string): Promise<Profile> {
+  await hydrateAuthStateFromDatabase();
+  const normalized = normalizeEmail(email);
+
+  if (isSupabaseConfigured()) {
+    let supabaseErrorMessage: string | undefined;
+    try {
+      const supabase = await tryCreateSupabaseServerClient();
+      if (!supabase) {
+        if (isDemoAuthEnabled()) return signInWithDemoPassword(normalized, password);
+        throw new AppError(AUTH_NOT_CONFIGURED_MESSAGE, "unavailable");
+      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalized,
+        password,
+      });
+      if (!error && data.user) {
+        const profile = getProfileByEmail(normalized);
+        if (!profile) {
+          await supabase.auth.signOut();
+          throw new AppError("This account is not set up for the scheduling application.", "unauthorized");
+        }
+        assertActiveProfileStatus(profile.status);
+        if (!profile.authUserId) {
+          setProfileAuthUserId(profile.id, data.user.id);
+          profile.authUserId = data.user.id;
+          await persistProfile(profile);
+        }
+        return profile;
+      }
+      supabaseErrorMessage = error?.message;
+      logger.info("auth_login_failed", { email: normalized, message: supabaseErrorMessage });
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      supabaseErrorMessage = error instanceof Error ? error.message : "unknown";
+      logger.info("auth_login_failed", { email: normalized, message: supabaseErrorMessage });
+    }
+
+    if (isDemoAuthEnabled()) {
+      try {
+        return signInWithDemoPassword(normalized, password);
+      } catch (demoError) {
+        if (demoError instanceof AppError && demoError.message !== INVALID_CREDENTIALS_MESSAGE) {
+          throw demoError;
+        }
+      }
+    }
+
+    throw new AppError(
+      isInvalidLoginMessage(supabaseErrorMessage)
+        ? INVALID_CREDENTIALS_MESSAGE
+        : mapSupabaseAuthError(supabaseErrorMessage) || INVALID_CREDENTIALS_MESSAGE,
+      "unauthorized"
+    );
+  }
+
+  return signInWithDemoPassword(normalized, password);
 }
 
 export async function registerStudent(
