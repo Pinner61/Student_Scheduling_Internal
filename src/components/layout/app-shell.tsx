@@ -5,24 +5,26 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
-import { getNavItems } from "@/lib/auth/rbac";
+import { getNavItems, roleLabel } from "@/lib/auth/rbac";
 import type { SessionUser } from "@/types";
 import { RoleSwitcher } from "@/components/dev/role-switcher";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { NotificationBell } from "@/features/notifications/notification-bell";
 import type { AppNotification } from "@/types";
 
-const showRoleSwitcher =
-  process.env.NODE_ENV === "development" ||
-  process.env.NEXT_PUBLIC_ENABLE_ROLE_SWITCHER === "true";
-
 interface AppShellProps {
   user: SessionUser;
   notifications?: AppNotification[];
+  showRoleSwitcher?: boolean;
   children: React.ReactNode;
 }
 
-export function AppShell({ user, notifications = [], children }: AppShellProps) {
+export function AppShell({
+  user,
+  notifications = [],
+  showRoleSwitcher = false,
+  children,
+}: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navItems = getNavItems(user.role);
@@ -50,9 +52,20 @@ export function AppShell({ user, notifications = [], children }: AppShellProps) 
           <div className="flex items-center gap-3">
             <NotificationBell notifications={notifications} />
             {showRoleSwitcher && <RoleSwitcher currentUser={user} />}
-            <span className="hidden text-sm sm:inline">
-              {user.firstName} {user.lastName}
+            <span className="hidden text-right sm:block">
+              <span className="block text-sm font-medium leading-tight">
+                {user.firstName} {user.lastName}
+              </span>
+              <span className="block text-xs text-[var(--color-muted-foreground)]">
+                {roleLabel(user.role)}
+              </span>
             </span>
+            <Link
+              href="/profile"
+              className="hidden text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] sm:inline"
+            >
+              Profile
+            </Link>
             <SignOutButton />
           </div>
         </div>

@@ -16,7 +16,7 @@ export function SignOutButton() {
         redirect: "manual",
       });
     } finally {
-      window.location.assign("/login");
+      window.location.href = "/login";
     }
   }
 

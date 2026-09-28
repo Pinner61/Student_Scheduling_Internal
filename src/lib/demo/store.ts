@@ -3,6 +3,7 @@ import type {
   AppSettings,
   AuditAction,
   AuditLog,
+  Invitation,
   Profile,
   RecurringAvailability,
   ScheduleException,
@@ -27,14 +28,15 @@ import {
   validatePeriodDates,
 } from "@/lib/schedule/periods";
 import { AppError } from "@/lib/errors";
-import { createSeedDatabase, FALL_2026_PERIOD_ID, type DemoDatabase } from "./seed-data";
+import { isDemoMode } from "@/lib/config";
+import { createEmptyDatabase, createSeedDatabase, FALL_2026_PERIOD_ID, type DemoDatabase } from "./seed-data";
 import { v4 as uuidv4 } from "uuid";
 
 let store: DemoDatabase | null = null;
 
 function getStore(): DemoDatabase {
   if (!store) {
-    store = createSeedDatabase();
+    store = isDemoMode() ? createSeedDatabase() : createEmptyDatabase();
   }
   return store;
 }
@@ -553,10 +555,12 @@ export function authenticateDemo(email: string, password: string): Profile | nul
   );
   if (!account) {
     const profile = getProfileByEmail(email);
-    if (profile && password === "Demo123!") return profile;
+    if (profile && password === "Demo123!" && profile.status === "active") return profile;
     return null;
   }
-  return getProfileById(account.profileId) ?? null;
+  const profile = getProfileById(account.profileId);
+  if (!profile || profile.status !== "active") return null;
+  return profile;
 }
 
 export function getStudentsByTeam(teamId: string): Profile[] {
@@ -583,6 +587,10 @@ export function createUser(
     email: string;
     role: Profile["role"];
     teamId: string | null;
+    status?: Profile["status"];
+    invitedBy?: string | null;
+    authUserId?: string | null;
+    password?: string | null;
   },
   actorId: string
 ): Profile {
@@ -592,24 +600,37 @@ export function createUser(
   const now = new Date().toISOString();
   const profile: Profile = {
     id: uuidv4(),
-    authUserId: null,
+    authUserId: data.authUserId ?? null,
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email.toLowerCase(),
     role: data.role,
-    status: "active",
+    status: data.status ?? "active",
+    lastLoginAt: null,
+    invitedBy: data.invitedBy === undefined ? actorId : data.invitedBy,
+    activatedAt: (data.status ?? "active") === "active" ? now : null,
     createdAt: now,
     updatedAt: now,
   };
   const db = getStore();
   db.profiles.push(profile);
-  db.accounts.push({
-    email: profile.email,
-    password: "Demo123!",
-    profileId: profile.id,
-    role: profile.role,
-    label: `${profile.firstName} ${profile.lastName}`,
-  });
+  if (data.password) {
+    db.accounts.push({
+      email: profile.email,
+      password: data.password,
+      profileId: profile.id,
+      role: profile.role,
+      label: `${profile.firstName} ${profile.lastName}`,
+    });
+  } else if ((data.status ?? "active") === "active") {
+    db.accounts.push({
+      email: profile.email,
+      password: "Demo123!",
+      profileId: profile.id,
+      role: profile.role,
+      label: `${profile.firstName} ${profile.lastName}`,
+    });
+  }
   if (data.teamId) {
     if (!db.teams.some((t) => t.id === data.teamId)) {
       throw new AppError("That team does not exist.", "validation");
@@ -754,6 +775,189 @@ export function markAllNotificationsRead(userId: string): void {
       notification.readAt = now;
     }
   }
+}
+
+export function getProfileByAuthUserId(authUserId: string): Profile | undefined {
+  return getStore().profiles.find((p) => p.authUserId === authUserId);
+}
+
+export function upsertProfileInStore(profile: Profile): Profile {
+  const db = getStore();
+  const existing = db.profiles.find(
+    (p) => p.id === profile.id || p.email.toLowerCase() === profile.email.toLowerCase()
+  );
+  if (existing) {
+    Object.assign(existing, profile, {
+      lastLoginAt: profile.lastLoginAt ?? existing.lastLoginAt ?? null,
+      invitedBy: profile.invitedBy ?? existing.invitedBy ?? null,
+      activatedAt: profile.activatedAt ?? existing.activatedAt ?? null,
+    });
+    return existing;
+  }
+  const next: Profile = {
+    ...profile,
+    lastLoginAt: profile.lastLoginAt ?? null,
+    invitedBy: profile.invitedBy ?? null,
+    activatedAt: profile.activatedAt ?? null,
+  };
+  db.profiles.push(next);
+  return next;
+}
+
+export function markLastLogin(profileId: string): Profile | undefined {
+  const profile = getProfileById(profileId);
+  if (!profile) return undefined;
+  profile.lastLoginAt = new Date().toISOString();
+  profile.updatedAt = profile.lastLoginAt;
+  return profile;
+}
+
+export function setProfileAuthUserId(profileId: string, authUserId: string): Profile | undefined {
+  const profile = getProfileById(profileId);
+  if (!profile) return undefined;
+  profile.authUserId = authUserId;
+  profile.updatedAt = new Date().toISOString();
+  return profile;
+}
+
+export function setDemoAccountPassword(profileId: string, password: string): void {
+  const db = getStore();
+  const profile = getProfileById(profileId);
+  if (!profile) return;
+  const existing = db.accounts.find((account) => account.profileId === profileId);
+  if (existing) {
+    existing.password = password;
+    existing.email = profile.email;
+    existing.role = profile.role;
+    return;
+  }
+  db.accounts.push({
+    email: profile.email,
+    password,
+    profileId,
+    role: profile.role,
+    label: `${profile.firstName} ${profile.lastName}`,
+  });
+}
+
+export function activateProfile(
+  profileId: string,
+  updates: { firstName?: string; lastName?: string; authUserId?: string | null }
+): Profile | undefined {
+  const profile = getProfileById(profileId);
+  if (!profile) return undefined;
+  const now = new Date().toISOString();
+  if (updates.firstName) profile.firstName = updates.firstName;
+  if (updates.lastName) profile.lastName = updates.lastName;
+  if (updates.authUserId) profile.authUserId = updates.authUserId;
+  profile.status = "active";
+  profile.activatedAt = now;
+  profile.updatedAt = now;
+  return profile;
+}
+
+export function listInvitations(): Invitation[] {
+  return [...getStore().invitations].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getInvitationById(id: string): Invitation | undefined {
+  return getStore().invitations.find((invitation) => invitation.id === id);
+}
+
+export function getInvitationByTokenHash(tokenHash: string): Invitation | undefined {
+  return getStore().invitations.find((invitation) => invitation.tokenHash === tokenHash);
+}
+
+export function getOpenInvitationByEmail(email: string): Invitation | undefined {
+  const now = Date.now();
+  return getStore().invitations.find(
+    (invitation) =>
+      invitation.email === email.toLowerCase() &&
+      !invitation.acceptedAt &&
+      !invitation.cancelledAt &&
+      new Date(invitation.expiresAt).getTime() > now
+  );
+}
+
+export function upsertInvitationInStore(invitation: Invitation): Invitation {
+  const db = getStore();
+  const existing = db.invitations.find((item) => item.id === invitation.id);
+  if (existing) {
+    Object.assign(existing, invitation);
+    return existing;
+  }
+  db.invitations.push(invitation);
+  return invitation;
+}
+
+export function replaceInvitations(invitations: Invitation[]): void {
+  getStore().invitations = [...invitations];
+}
+
+export function createInvitationRecord(data: {
+  email: string;
+  role: Profile["role"];
+  teamId: string | null;
+  invitedBy: string;
+  profileId: string;
+  tokenHash: string;
+  expiresAt: string;
+}): Invitation {
+  const invitation: Invitation = {
+    id: uuidv4(),
+    email: data.email.toLowerCase(),
+    role: data.role,
+    teamId: data.teamId,
+    invitedBy: data.invitedBy,
+    profileId: data.profileId,
+    tokenHash: data.tokenHash,
+    expiresAt: data.expiresAt,
+    acceptedAt: null,
+    cancelledAt: null,
+    createdAt: new Date().toISOString(),
+  };
+  getStore().invitations.unshift(invitation);
+  addAuditLog(data.invitedBy, "user_invited", "invitation", invitation.id, {
+    email: invitation.email,
+    role: invitation.role,
+    profileId: invitation.profileId,
+  });
+  return invitation;
+}
+
+export function reissueInvitationRecord(
+  invitationId: string,
+  tokenHash: string,
+  expiresAt: string,
+  actorId: string
+): Invitation | undefined {
+  const invitation = getInvitationById(invitationId);
+  if (!invitation || invitation.acceptedAt || invitation.cancelledAt) return undefined;
+  invitation.tokenHash = tokenHash;
+  invitation.expiresAt = expiresAt;
+  addAuditLog(actorId, "user_invited", "invitation", invitation.id, {
+    email: invitation.email,
+    reissued: true,
+  });
+  return invitation;
+}
+
+export function cancelInvitationRecord(invitationId: string, actorId: string): Invitation | undefined {
+  const invitation = getInvitationById(invitationId);
+  if (!invitation || invitation.acceptedAt) return undefined;
+  invitation.cancelledAt = new Date().toISOString();
+  addAuditLog(actorId, "user_updated", "invitation", invitation.id, {
+    email: invitation.email,
+    cancelled: true,
+  });
+  return invitation;
+}
+
+export function acceptInvitationRecord(invitationId: string): Invitation | undefined {
+  const invitation = getInvitationById(invitationId);
+  if (!invitation) return undefined;
+  invitation.acceptedAt = new Date().toISOString();
+  return invitation;
 }
 
 export { FALL_2026_PERIOD_ID };

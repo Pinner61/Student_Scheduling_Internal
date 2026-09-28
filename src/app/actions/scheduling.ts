@@ -160,7 +160,11 @@ export async function deactivateUserAction(userId: string) {
   if (!user) return { error: "You need to sign in again." };
 
   try {
-    deactivateUser(user, userId);
+    const profile = deactivateUser(user, userId);
+    if (profile) {
+      const { persistAccountStatus } = await import("@/lib/auth/service");
+      await persistAccountStatus(profile);
+    }
     revalidatePath("/admin/users");
     return { success: true };
   } catch {
@@ -173,7 +177,11 @@ export async function reactivateUserAction(userId: string) {
   if (!user) return { error: "You need to sign in again." };
 
   try {
-    reactivateUser(user, userId);
+    const profile = reactivateUser(user, userId);
+    if (profile) {
+      const { persistAccountStatus } = await import("@/lib/auth/service");
+      await persistAccountStatus(profile);
+    }
     revalidatePath("/admin/users");
     return { success: true };
   } catch {

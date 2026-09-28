@@ -2,8 +2,10 @@ import { Suspense } from "react";
 import { listUsers, listTeams } from "@/lib/services/data-service";
 import { UsersTable } from "@/features/users/users-table";
 import { UsersFilters } from "@/features/users/users-filters";
-import { CreateUserForm } from "@/features/users/create-user-form";
 import { CsvImportForm } from "@/features/users/csv-import-form";
+import { InviteUserForm } from "@/features/users/invite-user-form";
+import { listUserInvitations } from "@/lib/auth/service";
+import { hydrateAuthStateFromDatabase } from "@/lib/auth/persist";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageProps {
@@ -17,6 +19,7 @@ interface PageProps {
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
   const params = await searchParams;
+  await hydrateAuthStateFromDatabase();
   const users = listUsers({
     search: params.search,
     role: params.role,
@@ -24,6 +27,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     status: params.status,
   });
   const teams = listTeams();
+  const invitations = listUserInvitations();
   const supervisors = listUsers({ role: "supervisor", status: "active" }).map((user) => ({
     id: user.id,
     name: `${user.firstName} ${user.lastName}`,
@@ -40,10 +44,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         </div>
         <div className="flex flex-wrap gap-2">
           <CsvImportForm />
-          <CreateUserForm
-            teams={teams.map((t) => ({ id: t.id, name: t.name }))}
-            supervisors={supervisors}
-          />
+          <InviteUserForm teams={teams.map((t) => ({ id: t.id, name: t.name }))} />
         </div>
       </div>
 
@@ -51,7 +52,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         <UsersFilters teams={teams} />
       </Suspense>
 
-      <UsersTable users={users} teams={teams} supervisors={supervisors} />
+      <UsersTable users={users} teams={teams} supervisors={supervisors} invitations={invitations} />
     </div>
   );
 }
