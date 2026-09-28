@@ -97,28 +97,31 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Demo accounts</CardTitle>
-            <CardDescription>Click to fill credentials for testing.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {DEMO_ACCOUNTS.map((account) => (
-              <button
-                key={account.email}
-                type="button"
-                className="flex w-full items-center justify-between rounded-md border border-[var(--color-border)] px-3 py-2 text-left text-sm hover:bg-[var(--color-muted)]"
-                onClick={() => fillDemo(account)}
-              >
-                <span>{account.role}</span>
-                <span className="text-[var(--color-muted-foreground)]">{account.email}</span>
-              </button>
-            ))}
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              Password for all demo accounts: Demo123!
-            </p>
-          </CardContent>
-        </Card>
+        {(process.env.NODE_ENV !== "production" ||
+          process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true") && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Demo accounts</CardTitle>
+              <CardDescription>Click to fill credentials for testing.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {DEMO_ACCOUNTS.map((account) => (
+                <button
+                  key={account.email}
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md border border-[var(--color-border)] px-3 py-2 text-left text-sm hover:bg-[var(--color-muted)] focus-visible:outline-none"
+                  onClick={() => fillDemo(account)}
+                >
+                  <span>{account.role}</span>
+                  <span className="text-[var(--color-muted-foreground)]">{account.email}</span>
+                </button>
+              ))}
+              <p className="text-xs text-[var(--color-muted-foreground)]">
+                Password for all demo accounts: Demo123!
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

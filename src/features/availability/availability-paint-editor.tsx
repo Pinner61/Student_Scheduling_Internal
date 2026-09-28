@@ -31,6 +31,7 @@ interface AvailabilityPaintEditorProps {
   workingDayStart: string;
   workingDayEnd: string;
   intervalMinutes?: number;
+  readOnly?: boolean;
 }
 
 export function AvailabilityPaintEditor({
@@ -38,6 +39,7 @@ export function AvailabilityPaintEditor({
   workingDayStart,
   workingDayEnd,
   intervalMinutes = 30,
+  readOnly = false,
 }: AvailabilityPaintEditorProps) {
   const slotStarts = useMemo(
     () => generateSlotStarts(workingDayStart, workingDayEnd, intervalMinutes),
@@ -232,6 +234,7 @@ export function AvailabilityPaintEditor({
                       flashKey === key && "animate-cell-pulse"
                     )}
                     onPointerDown={(e) => {
+                      if (readOnly) return;
                       e.preventDefault();
                       painting.current = true;
                       if (isNoOp(day, slot)) {
@@ -242,6 +245,7 @@ export function AvailabilityPaintEditor({
                       paintCell(day, slot);
                     }}
                     onClick={(e) => {
+                      if (readOnly) return;
                       if (e.detail !== 0) return;
                       if (isNoOp(day, slot)) {
                         setFlashKey(key);
@@ -251,7 +255,15 @@ export function AvailabilityPaintEditor({
                       paintCell(day, slot);
                     }}
                     onPointerEnter={() => {
+                      if (readOnly) return;
                       if (painting.current && !isNoOp(day, slot)) paintCell(day, slot);
+                    }}
+                    onKeyDown={(e) => {
+                      if (readOnly) return;
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        paintCell(day, slot);
+                      }
                     }}
                   >
                     {mode ? workModeLabel(mode) : ""}
@@ -264,10 +276,10 @@ export function AvailabilityPaintEditor({
       </div>
 
       <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-[var(--color-background)] py-4">
-        <Button onClick={handleSave} disabled={saving || !dirty}>
+        <Button onClick={handleSave} disabled={saving || !dirty || readOnly}>
           {saving ? "Saving…" : "Save Availability"}
         </Button>
-        <Button variant="secondary" onClick={handleDiscard} disabled={!dirty}>
+        <Button variant="secondary" onClick={handleDiscard} disabled={!dirty || readOnly}>
           Discard Changes
         </Button>
         <Button variant="outline" onClick={handleShare}>

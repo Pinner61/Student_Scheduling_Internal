@@ -9,6 +9,7 @@ function exception(overrides: Partial<ScheduleException>): ScheduleException {
   return {
     id: "e1",
     userId: "u1",
+    schedulePeriodId: "period-test",
     exceptionDate: "2026-09-21",
     startTime: "10:00",
     endTime: "11:00",

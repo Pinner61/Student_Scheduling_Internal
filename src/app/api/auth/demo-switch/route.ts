@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getProfileByEmail } from "@/lib/demo/store";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
-import { isDevRoleSwitcherEnabled } from "@/lib/config";
+import { isDemoAuthEnabled, isDevRoleSwitcherEnabled } from "@/lib/config";
 
 export async function POST(request: Request) {
-  if (!isDevRoleSwitcherEnabled()) {
+  if (!isDemoAuthEnabled() || !isDevRoleSwitcherEnabled()) {
     return NextResponse.json({ error: "Not available" }, { status: 403 });
   }
 

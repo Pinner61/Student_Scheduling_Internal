@@ -9,6 +9,8 @@ import { getNavItems } from "@/lib/auth/rbac";
 import type { SessionUser } from "@/types";
 import { RoleSwitcher } from "@/components/dev/role-switcher";
 import { SignOutButton } from "@/components/layout/sign-out-button";
+import { NotificationBell } from "@/features/notifications/notification-bell";
+import type { AppNotification } from "@/types";
 
 const showRoleSwitcher =
   process.env.NODE_ENV === "development" ||
@@ -16,10 +18,11 @@ const showRoleSwitcher =
 
 interface AppShellProps {
   user: SessionUser;
+  notifications?: AppNotification[];
   children: React.ReactNode;
 }
 
-export function AppShell({ user, children }: AppShellProps) {
+export function AppShell({ user, notifications = [], children }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navItems = getNavItems(user.role);
@@ -45,6 +48,7 @@ export function AppShell({ user, children }: AppShellProps) {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <NotificationBell notifications={notifications} />
             {showRoleSwitcher && <RoleSwitcher currentUser={user} />}
             <span className="hidden text-sm sm:inline">
               {user.firstName} {user.lastName}

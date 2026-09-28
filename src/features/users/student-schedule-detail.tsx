@@ -47,6 +47,9 @@ export function StudentScheduleDetail({ userId }: { userId: string }) {
         <p className="text-sm text-[var(--color-muted-foreground)]">
           {profile.teamName ?? "Unassigned"} · {profile.role} · Account Status: {accountStatus} ·{" "}
           {scheduleStatusLabel(profile.scheduleStatus)}
+          {profile.submittedAt
+            ? ` · Submitted ${new Date(profile.submittedAt).toLocaleString("en-US", { timeZone: "America/Phoenix" })}`
+            : ""}
         </p>
       </div>
 

@@ -1,12 +1,16 @@
+import { AppError } from "@/lib/errors";
+import { logger } from "@/lib/logging/logger";
 import type { SessionUser, UserRole } from "@/types";
 
 export type Permission =
   | "read:own_profile"
   | "read:own_schedule"
   | "write:own_availability"
+  | "submit:own_schedule"
   | "read:own_exceptions"
   | "write:own_exceptions"
   | "cancel:own_exceptions"
+  | "read:own_notifications"
   | "read:team_schedules"
   | "read:team_exceptions"
   | "review:exceptions"
@@ -16,6 +20,7 @@ export type Permission =
   | "write:teams"
   | "read:audit_log"
   | "write:settings"
+  | "write:schedule_periods"
   | "read:all_schedules";
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -23,17 +28,21 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "read:own_profile",
     "read:own_schedule",
     "write:own_availability",
+    "submit:own_schedule",
     "read:own_exceptions",
     "write:own_exceptions",
     "cancel:own_exceptions",
+    "read:own_notifications",
   ],
   supervisor: [
     "read:own_profile",
     "read:own_schedule",
     "write:own_availability",
+    "submit:own_schedule",
     "read:own_exceptions",
     "write:own_exceptions",
     "cancel:own_exceptions",
+    "read:own_notifications",
     "read:team_schedules",
     "read:team_exceptions",
     "review:exceptions",
@@ -42,9 +51,11 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "read:own_profile",
     "read:own_schedule",
     "write:own_availability",
+    "submit:own_schedule",
     "read:own_exceptions",
     "write:own_exceptions",
     "cancel:own_exceptions",
+    "read:own_notifications",
     "read:team_schedules",
     "read:team_exceptions",
     "review:exceptions",
@@ -54,6 +65,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "write:teams",
     "read:audit_log",
     "write:settings",
+    "write:schedule_periods",
     "read:all_schedules",
   ],
 };
@@ -65,7 +77,12 @@ export function hasPermission(user: SessionUser | null, permission: Permission):
 
 export function requirePermission(user: SessionUser | null, permission: Permission): void {
   if (!hasPermission(user, permission)) {
-    throw new Error("Unauthorized");
+    logger.warn("authorization_denied", {
+      permission,
+      userId: user?.id,
+      role: user?.role,
+    });
+    throw new AppError("You don’t have permission to do that.", "unauthorized");
   }
 }
 
@@ -120,6 +137,7 @@ export function getNavItems(role: UserRole) {
         { href: "/admin/overview", label: "Overview" },
         { href: "/admin/users", label: "Users" },
         { href: "/admin/teams", label: "Teams" },
+        { href: "/admin/periods", label: "Schedule Periods" },
         { href: "/admin/schedule", label: "Coverage" },
         { href: "/admin/exceptions", label: "Exceptions" },
         { href: "/admin/audit", label: "Audit Log" },

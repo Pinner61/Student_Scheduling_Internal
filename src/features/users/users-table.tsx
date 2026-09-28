@@ -26,10 +26,11 @@ import { scheduleStatusLabel } from "@/components/schedule/schedule-language";
 
 interface UsersTableProps {
   users: UserWithTeam[];
-  teams?: { id: string; name: string }[];
+  teams?: { id: string; name: string; supervisorId?: string | null }[];
+  supervisors?: { id: string; name: string }[];
 }
 
-export function UsersTable({ users, teams = [] }: UsersTableProps) {
+export function UsersTable({ users, teams = [], supervisors = [] }: UsersTableProps) {
   const router = useRouter();
   const [deactivateTarget, setDeactivateTarget] = useState<UserWithTeam | null>(null);
   const [detailUser, setDetailUser] = useState<UserWithTeam | null>(null);
@@ -109,7 +110,7 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
                 <td className="px-4 py-3 text-right">
                   <DropdownMenu triggerLabel={`Actions for ${user.firstName} ${user.lastName}`}>
                     <DropdownMenuItem onSelect={() => setDetailUser(user)}>
-                      View profile
+                      View
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => {
@@ -119,7 +120,13 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
                       View schedule
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setDetailUser(user)}>
-                      Edit user
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setDetailUser(user)}>
+                      Assign Team
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setDetailUser(user)}>
+                      Assign Supervisor
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => {
@@ -187,6 +194,7 @@ export function UsersTable({ users, teams = [] }: UsersTableProps) {
         <UserDetailPanel
           user={detailUser}
           teams={teams}
+          supervisors={supervisors}
           onClose={() => setDetailUser(null)}
         />
       )}

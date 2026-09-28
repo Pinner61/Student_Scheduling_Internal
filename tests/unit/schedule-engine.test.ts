@@ -13,6 +13,7 @@ function recurring(
   return {
     id: "r1",
     userId: "u1",
+    schedulePeriodId: "period-test",
     effectiveFrom: null,
     effectiveUntil: null,
     createdAt: "2026-01-01T00:00:00.000Z",
@@ -27,6 +28,7 @@ function exception(
   return {
     id: "e1",
     userId: "u1",
+    schedulePeriodId: "period-test",
     replacementMode: null,
     reason: null,
     status: "APPROVED",

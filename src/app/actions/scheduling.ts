@@ -13,12 +13,23 @@ import {
   changeUserTeam,
   createTeam,
   updateTeam,
+  submitSchedule,
+  reopenSchedule,
+  createPeriod,
+  updatePeriod,
+  changePeriodStatus,
+  createUserAccount,
+  updateUserAccount,
+  assignSupervisor,
+  previewUserCsv,
+  importUserCsv,
+  markNotificationRead,
+  markAllNotificationsRead,
 } from "@/lib/services/data-service";
-import { validateAvailabilityRanges } from "@/lib/schedule/engine";
-import { getSettings } from "@/lib/services/data-service";
 import { availabilityFormSchema, exceptionFormSchema } from "@/lib/validations/availability";
 import { notify } from "@/lib/notifications";
-import type { Profile, Team } from "@/types";
+import { toUserFacingError } from "@/lib/errors";
+import type { Profile, SchedulePeriodStatus, Team } from "@/types";
 
 export async function saveAvailabilityAction(ranges: {
   dayOfWeek: number;
@@ -34,26 +45,20 @@ export async function saveAvailabilityAction(ranges: {
     return { error: "Invalid availability data" };
   }
 
-  const settings = getSettings();
-  const errors = validateAvailabilityRanges(
-    ranges,
-    settings.workingDayStart,
-    settings.workingDayEnd
-  );
-  if (errors.length > 0) {
-    return { error: errors.join(" ") };
+  try {
+    saveAvailability(
+      user,
+      user.id,
+      ranges.map((r) => ({
+        userId: user.id,
+        ...r,
+        effectiveFrom: null,
+        effectiveUntil: null,
+      }))
+    );
+  } catch (error) {
+    return { error: toUserFacingError(error, "We couldn’t save your availability.") };
   }
-
-  saveAvailability(
-    user,
-    user.id,
-    ranges.map((r) => ({
-      userId: user.id,
-      ...r,
-      effectiveFrom: null,
-      effectiveUntil: null,
-    }))
-  );
 
   await notify({
     name: "schedule_changed",
@@ -82,21 +87,24 @@ export async function submitExceptionAction(data: {
     return { error: "Invalid exception data" };
   }
 
-  const exception = submitException(user, {
-    exceptionDate: data.exceptionDate,
-    startTime: data.startTime,
-    endTime: data.endTime,
-    exceptionType: data.exceptionType,
-    replacementMode: data.replacementMode ?? null,
-    reason: data.reason ?? null,
-  });
+  try {
+    const exception = submitException(user, {
+      exceptionDate: data.exceptionDate,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      exceptionType: data.exceptionType,
+      replacementMode: data.replacementMode ?? null,
+      reason: data.reason ?? null,
+    });
 
-  const { notify } = await import("@/lib/notifications");
-  await notify({
-    name: "exception_submitted",
-    recipientUserIds: [user.id],
-    payload: { exceptionId: exception.id },
-  });
+    await notify({
+      name: "exception_submitted",
+      recipientUserIds: [user.id],
+      payload: { exceptionId: exception.id },
+    });
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to submit this exception.") };
+  }
 
   revalidatePath("/exceptions");
   revalidatePath("/schedule");
@@ -222,14 +230,18 @@ export async function createUserAction(data: {
   email: string;
   role: Profile["role"];
   teamId: string | null;
+  supervisorId?: string | null;
 }) {
   const user = await getSessionUser();
   if (!user) throw new Error("Unauthorized");
 
-  const { createUserAccount } = await import("@/lib/services/data-service");
-  createUserAccount(user, data);
-  revalidatePath("/admin/users");
-  return { success: true };
+  try {
+    createUserAccount(user, data);
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to create that user.") };
+  }
 }
 
 export async function requestScheduleUpdateAction(userId: string) {
@@ -256,6 +268,7 @@ export async function updateSettingsAction(settings: {
   coverageThresholdRemote?: number;
   coverageThresholdTotal?: number;
   exceptionApprovalRequired?: boolean;
+  notifyStudentsOnPeriodOpen?: boolean;
 }) {
   const user = await getSessionUser();
   if (!user) throw new Error("Unauthorized");
@@ -263,5 +276,151 @@ export async function updateSettingsAction(settings: {
   const { updateSettings } = await import("@/lib/services/data-service");
   updateSettings(user, settings);
   revalidatePath("/admin/settings");
+  return { success: true };
+}
+
+export async function submitScheduleAction() {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    const submission = submitSchedule(user, user.id);
+    await notify({
+      name: "schedule_submitted",
+      recipientUserIds: [user.id],
+      payload: { submittedAt: submission.submittedAt },
+    });
+    revalidatePath("/schedule");
+    revalidatePath("/availability");
+    revalidatePath("/supervisor/students");
+    return { success: true, submittedAt: submission.submittedAt };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to submit your schedule.") };
+  }
+}
+
+export async function reopenScheduleAction() {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    reopenSchedule(user, user.id);
+    revalidatePath("/schedule");
+    revalidatePath("/availability");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to reopen this schedule.") };
+  }
+}
+
+export async function createPeriodAction(data: {
+  name: string;
+  startDate: string;
+  endDate: string;
+}) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    createPeriod(user, data);
+    revalidatePath("/admin/periods");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to create that schedule period.") };
+  }
+}
+
+export async function updatePeriodAction(
+  periodId: string,
+  updates: { name?: string; startDate?: string; endDate?: string }
+) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    updatePeriod(user, periodId, updates);
+    revalidatePath("/admin/periods");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to update that schedule period.") };
+  }
+}
+
+export async function changePeriodStatusAction(
+  periodId: string,
+  status: SchedulePeriodStatus
+) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    changePeriodStatus(user, periodId, status);
+    revalidatePath("/admin/periods");
+    revalidatePath("/schedule");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to change that period status.") };
+  }
+}
+
+export async function updateUserAccountAction(
+  userId: string,
+  updates: Partial<Pick<Profile, "firstName" | "lastName" | "email" | "role">>
+) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    updateUserAccount(user, userId, updates);
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to update that user.") };
+  }
+}
+
+export async function assignSupervisorAction(teamId: string, supervisorId: string | null) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    assignSupervisor(user, teamId, supervisorId);
+    revalidatePath("/admin/users");
+    revalidatePath("/admin/teams");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to assign that supervisor.") };
+  }
+}
+
+export async function previewCsvAction(csvText: string) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    return previewUserCsv(user, csvText);
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to read that CSV file.") };
+  }
+}
+
+export async function importCsvAction(csvText: string) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  try {
+    const result = importUserCsv(user, csvText);
+    revalidatePath("/admin/users");
+    revalidatePath("/admin/audit");
+    return result;
+  } catch (error) {
+    return { error: toUserFacingError(error, "Unable to import users.") };
+  }
+}
+
+export async function markNotificationReadAction(notificationId: string) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  markNotificationRead(user, notificationId);
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function markAllNotificationsReadAction() {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+  markAllNotificationsRead(user);
+  revalidatePath("/");
   return { success: true };
 }
