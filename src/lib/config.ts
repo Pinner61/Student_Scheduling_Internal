@@ -1,8 +1,9 @@
+import { isSupabaseConfigured } from "@/lib/config/app-url";
+
 export function isDemoMode(): boolean {
   return (
     process.env.NEXT_PUBLIC_DEMO_MODE === "true" ||
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    !isSupabaseConfigured()
   );
 }
 
@@ -11,7 +12,7 @@ export function isDemoAuthEnabled(): boolean {
   if (process.env.NODE_ENV === "production") {
     return flag === "true";
   }
-  return flag !== "false";
+  return flag === "true" || (flag !== "false" && !isSupabaseConfigured());
 }
 
 export function isDevRoleSwitcherEnabled(): boolean {

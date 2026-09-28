@@ -20,12 +20,12 @@ export const userOnboardingSchema = z.object({
   email: z
     .string()
     .trim()
-    .email("Enter a valid email address.")
-    .transform((value) => value.toLowerCase()),
+    .transform((value) => value.toLowerCase())
+    .refine((value) => /^[^\s@]+@asu\.edu$/i.test(value), "Please use your @asu.edu email address."),
   role: z.enum(["student", "supervisor", "administrator"]),
   teamId: z.string().nullable().optional(),
   supervisorId: z.string().nullable().optional(),
-  status: z.enum(["active", "inactive"]).optional(),
+  status: z.enum(["active", "inactive", "pending"]).optional(),
 });
 
 const timeSchema = z.string().regex(/^\d{2}:\d{2}$/, "Use HH:mm time.");

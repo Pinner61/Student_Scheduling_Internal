@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { isSupabaseConfigured } from "@/lib/config/app-url";
 
 export async function createSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,9 +17,18 @@ export async function createSupabaseServerClient() {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
+          try {
+            cookieStore.set(name, value, options);
+          } catch {
+            // Called from a Server Component. Middleware refreshes the session.
+          }
         });
       },
     },
   });
+}
+
+export async function tryCreateSupabaseServerClient() {
+  if (!isSupabaseConfigured()) return null;
+  return createSupabaseServerClient();
 }

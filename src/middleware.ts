@@ -2,54 +2,68 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
 import { canAccessPath, getRoleHomePath } from "@/lib/auth/rbac";
+import { isPublicPath } from "@/lib/auth/public-paths";
+import { updateSupabaseSession } from "@/lib/supabase/middleware";
 import type { SessionUser } from "@/types";
 
-const PUBLIC_PATHS = [
-  "/login",
-  "/api/auth/login",
-  "/api/auth/logout",
-  "/api/auth/demo-switch",
-  "/api/health",
-];
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  let response: NextResponse;
+  let supabaseUser = null;
+  try {
+    const session = await updateSupabaseSession(request);
+    response = session.response;
+    supabaseUser = session.user;
+  } catch {
+    response = NextResponse.next({ request });
+  }
 
-  if (
-    PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon")
-  ) {
-    return NextResponse.next();
+  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon")) {
+    return response;
+  }
+
+  if (isPublicPath(pathname)) {
+    return response;
   }
 
   const sessionCookie = request.cookies.get(SESSION_COOKIE);
-  if (!sessionCookie?.value) {
-    if (pathname === "/") {
-      return NextResponse.redirect(new URL("/login", request.url));
+  let sessionUser: SessionUser | null = null;
+  if (sessionCookie?.value) {
+    try {
+      sessionUser = JSON.parse(sessionCookie.value) as SessionUser;
+    } catch {
+      sessionUser = null;
     }
+  }
+
+  const authenticated = Boolean(sessionUser || supabaseUser);
+  if (!authenticated) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  let user: SessionUser | null = null;
-  try {
-    user = JSON.parse(sessionCookie.value) as SessionUser;
-  } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
   if (pathname === "/") {
-    return NextResponse.redirect(new URL(getRoleHomePath(user.role), request.url));
+    if (!sessionUser) return response;
+    const redirect = NextResponse.redirect(new URL(getRoleHomePath(sessionUser.role), request.url));
+    copyCookies(response, redirect);
+    return redirect;
   }
 
-  if (!canAccessPath(user.role, pathname)) {
-    return NextResponse.redirect(new URL(getRoleHomePath(user.role), request.url));
+  if (sessionUser && !canAccessPath(sessionUser.role, pathname)) {
+    const redirect = NextResponse.redirect(new URL(getRoleHomePath(sessionUser.role), request.url));
+    copyCookies(response, redirect);
+    return redirect;
   }
 
-  return NextResponse.next();
+  return response;
+}
+
+function copyCookies(from: NextResponse, to: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => {
+    to.cookies.set(cookie.name, cookie.value);
+  });
 }
 
 export const config = {

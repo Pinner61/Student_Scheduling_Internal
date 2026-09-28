@@ -15,7 +15,12 @@ export default async function ProfilePage() {
   const availability = getAvailability(user.id);
   const weeklyRanges = recurringToWeeklyRanges(availability);
   const exceptions = studentVisibleExceptions(getExceptions(user.id)).slice(0, 5);
-  const accountStatus = profile?.status === "active" ? "Active" : "Inactive";
+          const accountStatus =
+            profile?.status === "active"
+              ? "Active"
+              : profile?.status === "pending"
+                ? "Pending invitation"
+                : "Deactivated";
 
   return (
     <div className="space-y-6">

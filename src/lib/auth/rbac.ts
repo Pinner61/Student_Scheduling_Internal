@@ -86,6 +86,34 @@ export function requirePermission(user: SessionUser | null, permission: Permissi
   }
 }
 
+export function requireRole(user: SessionUser | null, roles: UserRole | UserRole[]): SessionUser {
+  if (!user) {
+    logger.warn("authorization_denied", { reason: "unauthenticated" });
+    throw new AppError("You need to sign in again.", "unauthorized");
+  }
+  const allowed = Array.isArray(roles) ? roles : [roles];
+  if (!allowed.includes(user.role)) {
+    logger.warn("authorization_denied", {
+      userId: user.id,
+      role: user.role,
+      required: allowed,
+    });
+    throw new AppError("You don’t have permission to do that.", "unauthorized");
+  }
+  return user;
+}
+
+export function roleLabel(role: UserRole): string {
+  switch (role) {
+    case "student":
+      return "Student";
+    case "supervisor":
+      return "Supervisor";
+    case "administrator":
+      return "Administrator";
+  }
+}
+
 export function getRoleHomePath(role: UserRole): string {
   switch (role) {
     case "student":

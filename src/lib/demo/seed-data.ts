@@ -2,6 +2,7 @@ import type {
   AppNotification,
   AppSettings,
   AuditLog,
+  Invitation,
   Profile,
   RecurringAvailability,
   ScheduleException,
@@ -42,6 +43,7 @@ export interface DemoDatabase {
   exceptions: ScheduleException[];
   auditLogs: AuditLog[];
   notifications: AppNotification[];
+  invitations: Invitation[];
   settings: AppSettings;
   accounts: DemoAccount[];
 }
@@ -87,6 +89,9 @@ function makeProfile(
     email,
     role,
     status: "active",
+    lastLoginAt: null,
+    invitedBy: null,
+    activatedAt: now,
     createdAt: now,
     updatedAt: now,
   };
@@ -414,7 +419,25 @@ export function createSeedDatabase(): DemoDatabase {
     exceptions,
     auditLogs,
     notifications,
+    invitations: [],
     settings: { ...DEFAULT_SETTINGS },
     accounts,
+  };
+}
+
+export function createEmptyDatabase(): DemoDatabase {
+  return {
+    profiles: [],
+    teams: [],
+    memberships: [],
+    periods: [],
+    submissions: [],
+    availability: [],
+    exceptions: [],
+    auditLogs: [],
+    notifications: [],
+    invitations: [],
+    settings: { ...DEFAULT_SETTINGS },
+    accounts: [],
   };
 }

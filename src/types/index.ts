@@ -1,5 +1,5 @@
 export type UserRole = "student" | "supervisor" | "administrator";
-export type UserStatus = "active" | "inactive";
+export type UserStatus = "active" | "inactive" | "pending";
 export type WorkMode = "OFFICE" | "REMOTE";
 export type ExceptionType =
   | "UNAVAILABLE"
@@ -22,6 +22,8 @@ export type AuditAction =
   | "exception_declined"
   | "exception_cancelled"
   | "user_created"
+  | "user_invited"
+  | "user_activated"
   | "user_updated"
   | "user_role_changed"
   | "team_assignment_changed"
@@ -47,8 +49,25 @@ export interface Profile {
   email: string;
   role: UserRole;
   status: UserStatus;
+  lastLoginAt: string | null;
+  invitedBy: string | null;
+  activatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Invitation {
+  id: string;
+  email: string;
+  role: UserRole;
+  teamId: string | null;
+  invitedBy: string;
+  profileId: string;
+  tokenHash: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
 }
 
 export interface Team {

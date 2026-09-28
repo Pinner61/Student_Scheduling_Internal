@@ -16,6 +16,9 @@ interface RoleSwitcherProps {
 
 export function RoleSwitcher({ currentUser }: RoleSwitcherProps) {
   const router = useRouter();
+  if (!DEMO_USERS.some((user) => user.email === currentUser.email)) {
+    return null;
+  }
 
   async function handleSwitch(email: string) {
     await fetch("/api/auth/demo-switch", {
