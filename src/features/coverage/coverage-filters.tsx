@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { useDebouncedQueryParam } from "@/lib/use-debounced-query-param";
 import type { Team, Profile } from "@/types";
 
 interface CoverageFiltersProps {
@@ -16,15 +17,22 @@ interface CoverageFiltersProps {
 export function CoverageFilters({ teams, students, basePath, showSearch, defaultDate }: CoverageFiltersProps) {
   const router = useRouter();
   const params = useSearchParams();
+  const paramsString = params.toString();
+  const search = useDebouncedQueryParam("q", basePath, params.get("q") ?? "", paramsString);
+
+  function navigate(next: URLSearchParams, replace = false) {
+    const href = `${basePath}?${next.toString()}`;
+    if (replace) router.replace(href, { scroll: false });
+    else router.push(href, { scroll: false });
+  }
 
   function update(key: string, value: string) {
-    const next = new URLSearchParams(params.toString());
-    if (value && value !== "all") {
-      next.set(key, value);
-    } else {
-      next.delete(key);
-    }
-    router.push(`${basePath}?${next.toString()}`);
+    const next = new URLSearchParams(paramsString);
+    if (search.value) next.set("q", search.value);
+    else next.delete("q");
+    if (value && value !== "all") next.set(key, value);
+    else next.delete(key);
+    navigate(next);
   }
 
   return (
@@ -43,12 +51,22 @@ export function CoverageFilters({ teams, students, basePath, showSearch, default
       </div>
       {showSearch && (
         <Input
-          type="search"
+          ref={search.inputRef}
+          id="coverage-student-search"
+          key="coverage-student-search"
+          type="text"
           aria-label="Search student name"
           placeholder="Search student name"
-          defaultValue={params.get("q") ?? ""}
+          value={search.value}
+          autoComplete="off"
+          spellCheck={false}
           className="max-w-xs"
-          onChange={(e) => update("q", e.target.value)}
+          onChange={search.onChange}
+          onFocus={search.onFocus}
+          onBlur={search.onBlur}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.preventDefault();
+          }}
         />
       )}
       <Select

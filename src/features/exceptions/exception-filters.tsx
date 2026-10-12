@@ -19,7 +19,7 @@ export function ExceptionFilters({ teams, students, basePath }: ExceptionFilters
     const next = new URLSearchParams(params.toString());
     if (value && value !== "all") next.set(key, value);
     else next.delete(key);
-    router.push(`${basePath}?${next.toString()}`);
+    router.push(`${basePath}?${next.toString()}`, { scroll: false });
   }
 
   return (

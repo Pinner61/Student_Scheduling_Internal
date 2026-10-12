@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { useDebouncedQueryParam } from "@/lib/use-debounced-query-param";
 import type { Team } from "@/types";
 
 interface UsersFiltersProps {
@@ -12,24 +13,41 @@ interface UsersFiltersProps {
 export function UsersFilters({ teams }: UsersFiltersProps) {
   const router = useRouter();
   const params = useSearchParams();
+  const paramsString = params.toString();
+  const search = useDebouncedQueryParam("search", "/admin/users", params.get("search") ?? "", paramsString);
+
+  function navigate(next: URLSearchParams, replace = false) {
+    const href = `/admin/users?${next.toString()}`;
+    if (replace) router.replace(href, { scroll: false });
+    else router.push(href, { scroll: false });
+  }
 
   function update(key: string, value: string) {
-    const next = new URLSearchParams(params.toString());
-    if (value && value !== "all") {
-      next.set(key, value);
-    } else {
-      next.delete(key);
-    }
-    router.push(`/admin/users?${next.toString()}`);
+    const next = new URLSearchParams(paramsString);
+    if (search.value) next.set("search", search.value);
+    else next.delete("search");
+    if (value && value !== "all") next.set(key, value);
+    else next.delete(key);
+    navigate(next);
   }
 
   return (
     <div className="flex flex-wrap gap-3">
       <Input
-        type="search"
+        ref={search.inputRef}
+        id="users-search"
+        key="users-search"
+        type="text"
         placeholder="Search name or email…"
-        defaultValue={params.get("search") ?? ""}
-        onChange={(e) => update("search", e.target.value)}
+        value={search.value}
+        autoComplete="off"
+        spellCheck={false}
+        onChange={search.onChange}
+        onFocus={search.onFocus}
+        onBlur={search.onBlur}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.preventDefault();
+        }}
         className="max-w-xs"
         aria-label="Search users"
       />

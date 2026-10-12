@@ -40,7 +40,7 @@ export function FindCommonAvailabilityForm({
     if (mode !== "all") next.set("mode", mode);
     const selected = form.getAll("students").map(String);
     selected.forEach((id) => next.append("student", id));
-    router.push(`/supervisor/availability?${next.toString()}`);
+    router.push(`/supervisor/availability?${next.toString()}`, { scroll: false });
   }
 
   return (

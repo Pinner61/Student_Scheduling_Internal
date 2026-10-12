@@ -194,8 +194,14 @@ export function TeamEditDialog({
                 </label>
                 <Input
                   id={`team-search-${team.id}`}
+                  type="text"
                   value={query}
+                  autoComplete="off"
+                  spellCheck={false}
                   onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") e.preventDefault();
+                  }}
                   placeholder="Search by name or ASU email"
                 />
                 <ul className="mt-2 max-h-48 overflow-y-auto rounded-md border">
