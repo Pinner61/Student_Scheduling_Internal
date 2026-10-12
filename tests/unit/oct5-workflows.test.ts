@@ -76,7 +76,10 @@ describe("October 5 exception and team workflows", () => {
   it("cancels an approved future exception, restores baseline availability, and notifies the supervisor", () => {
     const student = asSession("alex.chen@asu.edu");
     const supervisor = asSession("smitchell@asu.edu");
-    const future = addDaysToDateString(getTodayDateString(), 8);
+    let future = addDaysToDateString(getTodayDateString(), 1);
+    while (new Date(`${future}T12:00:00`).getDay() !== 1) {
+      future = addDaysToDateString(future, 1);
+    }
     const exception = submitException(student, {
       exceptionDate: future,
       startTime: "10:00",
