@@ -13,7 +13,7 @@ export function AuditFilters({ users, teams = [] }: { users: UserWithTeam[]; tea
     const next = new URLSearchParams(params.toString());
     if (value && value !== "all") next.set(key, value);
     else next.delete(key);
-    router.push(`/admin/audit?${next.toString()}`);
+    router.push(`/admin/audit?${next.toString()}`, { scroll: false });
   }
 
   return (

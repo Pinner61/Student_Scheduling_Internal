@@ -11,14 +11,25 @@ interface DialogProps {
   children: React.ReactNode;
 }
 
+const FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function focusQuietly(el: HTMLElement | undefined) {
+  el?.focus({ preventScroll: true });
+}
+
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
   const panelRef = React.useRef<HTMLDivElement>(null);
+  const onOpenChangeRef = React.useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
+  const didInitialFocusRef = React.useRef(false);
 
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
+      didInitialFocusRef.current = false;
     }
     return () => {
       document.body.style.overflow = "";
@@ -28,31 +39,45 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   React.useEffect(() => {
     if (!open) return;
     const panel = panelRef.current;
-    const focusable = panel?.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const first = focusable?.[0];
-    const last = focusable?.[focusable.length - 1];
-    first?.focus();
+    if (!panel) return;
+    const dialog = panel;
+
+    function getFocusable() {
+      return dialog.querySelectorAll<HTMLElement>(FOCUSABLE);
+    }
+
+    if (!didInitialFocusRef.current) {
+      if (!dialog.contains(document.activeElement)) {
+        const preferred =
+          dialog.querySelector<HTMLElement>("input:not([type=hidden]), select, textarea") ??
+          getFocusable()[0];
+        focusQuietly(preferred);
+      }
+      didInitialFocusRef.current = true;
+    }
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        onOpenChange(false);
+        onOpenChangeRef.current(false);
         return;
       }
-      if (event.key !== "Tab" || !first || !last) return;
+      if (event.key !== "Tab") return;
+      const items = getFocusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
-        last.focus();
+        focusQuietly(last);
       } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault();
-        first.focus();
+        focusQuietly(first);
       }
     }
 
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, onOpenChange]);
+  }, [open]);
 
   if (!open) return null;
 

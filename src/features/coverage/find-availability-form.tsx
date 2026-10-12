@@ -32,7 +32,7 @@ export function FindAvailabilityForm({
     const mode = String(form.get("mode") ?? "all");
     if (team !== "all") next.set("team", team);
     if (mode !== "all") next.set("mode", mode);
-    router.push(`/supervisor/availability?${next.toString()}`);
+    router.push(`/supervisor/availability?${next.toString()}`, { scroll: false });
   }
 
   return (
