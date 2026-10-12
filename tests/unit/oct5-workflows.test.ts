@@ -9,6 +9,7 @@ import {
 } from "@/lib/demo/store";
 import {
   cancelExceptionRequest,
+  findCommonAvailability,
   getEffectiveSchedule,
   getExceptionsForTeam,
   getUser,
@@ -162,5 +163,28 @@ describe("October 5 exception and team workflows", () => {
     };
     expect(() => saveTeamEdits(student, teamId, payload)).toThrow(/permission/);
     expect(() => saveTeamEdits(supervisor, teamId, payload)).toThrow(/permission/);
+  });
+
+  it("does not crash common availability when a supervisor has no assigned students", () => {
+    const admin = asSession("preyes@asu.edu");
+    const supervisor = asSession("smitchell@asu.edu");
+    const alex = asSession("alex.chen@asu.edu");
+    const designId = getUser(alex.id)?.teamId;
+    if (!designId) throw new Error("expected Design team");
+    saveTeamEdits(admin, designId, {
+      name: "Design",
+      description: "Visual design and branding",
+      supervisorId: asSession("dokonkwo@asu.edu").id,
+      memberIds: [alex.id],
+    });
+    const result = findCommonAvailability({
+      viewer: supervisor,
+      startDate: getTodayDateString(),
+      endDate: addDaysToDateString(getTodayDateString(), 4),
+      durationMinutes: 60,
+    });
+    expect(result.students).toEqual([]);
+    expect(result.full).toEqual([]);
+    expect(result.partial).toEqual([]);
   });
 });

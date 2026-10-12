@@ -344,7 +344,7 @@ export function findCommonAvailability(params: {
     ? authorized.filter((student) => params.studentIds!.includes(student.id))
     : authorized;
   if (selected.length === 0) {
-    throw new AppError("Select at least one authorized student.", "validation");
+    return { students: [], full: [], partial: [] };
   }
 
   const students = selected.map((student) => {

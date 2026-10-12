@@ -15,6 +15,7 @@ import { FindCommonAvailabilityForm } from "@/features/coverage/find-common-avai
 import { AvailabilityWindowResults } from "@/features/coverage/availability-window-results";
 import { CommonAvailabilityResults } from "@/features/coverage/common-availability-results";
 import { EmptyState } from "@/components/ui/empty-state";
+import { toUserFacingError } from "@/lib/errors";
 
 interface PageProps {
   searchParams: Promise<{
@@ -66,17 +67,31 @@ export default async function FindAvailabilityPage({ searchParams }: PageProps) 
       })
     : [];
 
-  const common = commonSearch
-    ? findCommonAvailability({
-        viewer: user,
-        startDate: params.startDate ?? date,
-        endDate: params.endDate ?? addDaysToDateString(date, 4),
-        durationMinutes: Number(params.duration ?? "60"),
-        teamId: params.team,
-        studentIds: selectedStudentIds,
-        workMode: params.mode,
-      })
-    : null;
+  let common: ReturnType<typeof findCommonAvailability> | null = null;
+  let commonError: string | null = null;
+  if (commonSearch) {
+    if (uniqueStudents.length === 0) {
+      commonError = "No students are assigned to this team yet.";
+    } else {
+      try {
+        common = findCommonAvailability({
+          viewer: user,
+          startDate: params.startDate ?? date,
+          endDate: params.endDate ?? addDaysToDateString(date, 4),
+          durationMinutes: Number(params.duration ?? "60"),
+          teamId: params.team,
+          studentIds: selectedStudentIds,
+          workMode: params.mode,
+        });
+        if (common.students.length === 0) {
+          commonError = "Select at least one authorized student.";
+          common = null;
+        }
+      } catch (error) {
+        commonError = toUserFacingError(error, "We couldn’t find common availability. Try again.");
+      }
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -133,6 +148,20 @@ export default async function FindAvailabilityPage({ searchParams }: PageProps) 
             students: selectedStudentIds,
           }}
         />
+        {commonError && (
+          <EmptyState
+            title={
+              uniqueStudents.length === 0
+                ? "No students are assigned to this team yet."
+                : "No common availability yet"
+            }
+            description={
+              uniqueStudents.length === 0
+                ? "Assign students to a team you supervise, then search again."
+                : commonError
+            }
+          />
+        )}
         {common && (
           <CommonAvailabilityResults
             full={common.full}
