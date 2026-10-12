@@ -1,32 +1,33 @@
-import { format, parseISO } from "date-fns";
-import { enUS } from "date-fns/locale";
 import { getSessionUser } from "@/lib/auth/session";
 import { getAvailability, getExceptions, getUser, getCurrentPeriod } from "@/lib/services/data-service";
 import { ExceptionForm } from "@/features/exceptions/exception-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ExceptionStatusBadge } from "@/components/schedule/exception-status-badge";
 import { ExceptionActions } from "@/features/exceptions/exception-actions";
-import { formatTimeRange } from "@/lib/utils/time";
+import { formatLongWeekdayYear, formatTimeRange } from "@/lib/utils/time";
 import { EmptyState } from "@/components/ui/empty-state";
-import { studentVisibleExceptions } from "@/lib/schedule/exceptions";
+import { canCancelApprovedException, canWithdrawException, studentVisibleExceptions } from "@/lib/schedule/exceptions";
 import { EXCEPTION_TYPE_LABEL } from "@/components/schedule/schedule-language";
 import { canCreateException } from "@/lib/schedule/periods";
+import { getTodayDateString } from "@/lib/schedule/engine";
 import type { ScheduleException } from "@/types";
 
 function ExceptionListItem({
   exception,
   reviewerName,
-  showCancel,
+  actorId,
+  today,
 }: {
   exception: ScheduleException;
   reviewerName?: string | null;
-  showCancel?: boolean;
+  actorId: string;
+  today: string;
 }) {
   return (
     <li className="flex flex-wrap items-start justify-between gap-2 rounded-md border border-[var(--color-border)] p-3">
       <div className="space-y-1 text-sm">
         <div className="font-medium">
-          {format(parseISO(exception.exceptionDate), "EEEE, MMM d, yyyy", { locale: enUS })}
+          {formatLongWeekdayYear(exception.exceptionDate)}
         </div>
         <div>{formatTimeRange(exception.startTime, exception.endTime)}</div>
         <div className="text-[var(--color-muted-foreground)]">
@@ -42,9 +43,12 @@ function ExceptionListItem({
           </p>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <ExceptionStatusBadge status={exception.status} />
-        {showCancel && exception.status === "PENDING" && (
+        {canWithdrawException(exception, actorId) && (
+          <ExceptionActions exceptionId={exception.id} action="withdraw" />
+        )}
+        {canCancelApprovedException(exception, actorId, today) && (
           <ExceptionActions exceptionId={exception.id} action="cancel" />
         )}
       </div>
@@ -60,9 +64,11 @@ export default async function ExceptionsPage() {
   const visible = studentVisibleExceptions(getExceptions(user.id)).sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt)
   );
+  const today = getTodayDateString();
   const pending = visible.filter((e) => e.status === "PENDING");
   const approved = visible.filter((e) => e.status === "APPROVED");
   const rejected = visible.filter((e) => e.status === "DECLINED");
+  const history = visible.filter((e) => e.status === "WITHDRAWN" || e.status === "CANCELLED");
 
   return (
     <div className="space-y-6">
@@ -93,13 +99,13 @@ export default async function ExceptionsPage() {
         <CardContent>
           {pending.length === 0 ? (
             <EmptyState
-              title="No pending requests"
-              description="When you submit an exception, it stays here until a supervisor approves or rejects it."
+              title="No pending exceptions"
+              description="You don't have any exception requests awaiting review."
             />
           ) : (
             <ul className="space-y-3">
               {pending.map((ex) => (
-                <ExceptionListItem key={ex.id} exception={ex} showCancel />
+                <ExceptionListItem key={ex.id} exception={ex} actorId={user.id} today={today} />
               ))}
             </ul>
           )}
@@ -115,11 +121,14 @@ export default async function ExceptionsPage() {
         </CardHeader>
         <CardContent>
           {approved.length === 0 ? (
-            <p className="text-sm text-[var(--color-muted-foreground)]">No approved exceptions.</p>
+            <EmptyState
+              title="No upcoming exceptions"
+              description="No upcoming approved changes."
+            />
           ) : (
             <ul className="space-y-3">
               {approved.map((ex) => (
-                <ExceptionListItem key={ex.id} exception={ex} />
+                <ExceptionListItem key={ex.id} exception={ex} actorId={user.id} today={today} />
               ))}
             </ul>
           )}
@@ -147,12 +156,37 @@ export default async function ExceptionsPage() {
                   <ExceptionListItem
                     key={ex.id}
                     exception={ex}
+                    actorId={user.id}
+                    today={today}
                     reviewerName={
                       reviewer ? `${reviewer.firstName} ${reviewer.lastName}` : null
                     }
                   />
                 );
               })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">History</CardTitle>
+          <CardDescription>
+            Withdrawn requests and cancelled exceptions stay here. They do not change your weekly
+            schedule.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {history.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              No withdrawn or cancelled exceptions.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {history.map((ex) => (
+                <ExceptionListItem key={ex.id} exception={ex} actorId={user.id} today={today} />
+              ))}
             </ul>
           )}
         </CardContent>

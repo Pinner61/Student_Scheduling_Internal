@@ -1,10 +1,16 @@
 import { listTeams, getTeamMembers, listUsers } from "@/lib/services/data-service";
 import { TeamManagementActions } from "@/features/teams/team-management";
 import { TeamCard } from "@/features/teams/team-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function AdminTeamsPage() {
   const teams = listTeams();
-  const supervisors = listUsers({ role: "supervisor" });
+  const leads = listUsers().filter(
+    (user) =>
+      user.status === "active" &&
+      (user.role === "supervisor" || user.role === "administrator")
+  );
+  const students = listUsers({ role: "student", status: "active" });
   const allUsers = listUsers();
 
   return (
@@ -17,29 +23,41 @@ export default async function AdminTeamsPage() {
           </p>
         </div>
         <TeamManagementActions
-          supervisors={supervisors.map((s) => ({
+          supervisors={leads.map((s) => ({
             id: s.id,
             name: `${s.firstName} ${s.lastName}`,
           }))}
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {teams.map((team) => {
-          const members = getTeamMembers(team.id);
-          const supervisor = allUsers.find((s) => s.id === team.supervisorId);
-          return (
-            <TeamCard
-              key={team.id}
-              team={team}
-              supervisorName={
-                supervisor ? `${supervisor.firstName} ${supervisor.lastName}` : "Unassigned"
-              }
-              members={members}
-            />
-          );
-        })}
-      </div>
+      {teams.length === 0 ? (
+        <EmptyState
+          title="No teams yet"
+          description="Create a team to assign students and supervisors."
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {teams.map((team) => {
+            const members = getTeamMembers(team.id);
+            const supervisor = allUsers.find((s) => s.id === team.supervisorId);
+            return (
+              <TeamCard
+                key={team.id}
+                team={team}
+                supervisorName={
+                  supervisor ? `${supervisor.firstName} ${supervisor.lastName}` : "Unassigned"
+                }
+                members={members}
+                students={students}
+                leads={leads.map((lead) => ({
+                  id: lead.id,
+                  name: `${lead.firstName} ${lead.lastName}`,
+                }))}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

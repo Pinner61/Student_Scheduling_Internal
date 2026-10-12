@@ -13,6 +13,7 @@ import {
   changeUserTeam,
   createTeam,
   updateTeam,
+  saveTeamEdits,
   submitSchedule,
   reopenSchedule,
   createPeriod,
@@ -148,11 +149,25 @@ export async function reviewExceptionAction(
 
 export async function cancelExceptionAction(exceptionId: string) {
   const user = await getSessionUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return { error: "You need to sign in again." };
 
-  cancelExceptionRequest(user, exceptionId);
-  revalidatePath("/exceptions");
-  return { success: true };
+  try {
+    const updated = cancelExceptionRequest(user, exceptionId);
+    revalidatePath("/exceptions");
+    revalidatePath("/schedule");
+    revalidatePath("/supervisor/exceptions");
+    revalidatePath("/supervisor/students");
+    revalidatePath("/supervisor/overview");
+    revalidatePath("/supervisor/team");
+    revalidatePath("/supervisor/availability");
+    revalidatePath("/admin/exceptions");
+    if (updated?.userId) {
+      revalidatePath(`/supervisor/students/${updated.userId}`);
+    }
+    return { success: true, status: updated?.status };
+  } catch (error) {
+    return { error: toUserFacingError(error, "We couldn’t update that exception. Try again.") };
+  }
 }
 
 export async function deactivateUserAction(userId: string) {
@@ -225,11 +240,44 @@ export async function updateTeamAction(
   updates: Partial<Pick<Team, "name" | "description" | "supervisorId" | "status">>
 ) {
   const user = await getSessionUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return { error: "You need to sign in again." };
 
-  updateTeam(user, teamId, updates);
-  revalidatePath("/admin/teams");
-  return { success: true };
+  try {
+    updateTeam(user, teamId, updates);
+    revalidatePath("/admin/teams");
+    revalidatePath("/supervisor/team");
+    revalidatePath("/supervisor/students");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "We couldn’t save your changes. Try again.") };
+  }
+}
+
+export async function saveTeamEditsAction(
+  teamId: string,
+  data: {
+    name: string;
+    description: string;
+    supervisorId: string | null;
+    memberIds: string[];
+  }
+) {
+  const user = await getSessionUser();
+  if (!user) return { error: "You need to sign in again." };
+
+  try {
+    saveTeamEdits(user, teamId, data);
+    revalidatePath("/admin/teams");
+    revalidatePath("/admin/users");
+    revalidatePath("/admin/audit");
+    revalidatePath("/supervisor/team");
+    revalidatePath("/supervisor/students");
+    revalidatePath("/supervisor/overview");
+    revalidatePath("/supervisor/availability");
+    return { success: true };
+  } catch (error) {
+    return { error: toUserFacingError(error, "We couldn’t save your changes. Try again.") };
+  }
 }
 
 export async function createUserAction(data: {

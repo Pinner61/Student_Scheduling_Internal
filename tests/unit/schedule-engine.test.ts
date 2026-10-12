@@ -139,6 +139,26 @@ describe("exception application", () => {
     expect(blocks).toHaveLength(1);
     expect(blocks[0].endTime).toBe("13:00");
   });
+
+  it("ignores rejected, withdrawn, and cancelled exceptions", () => {
+    const baseline = [recurring({ dayOfWeek: 1, startTime: "09:00", endTime: "13:00", workMode: "OFFICE" })];
+    for (const status of ["DECLINED", "WITHDRAWN", "CANCELLED"] as const) {
+      const blocks = getEffectiveScheduleForDate(
+        baseline,
+        [
+          exception({
+            exceptionDate: monday,
+            startTime: "10:00",
+            endTime: "11:00",
+            exceptionType: "UNAVAILABLE",
+            status,
+          }),
+        ],
+        monday
+      );
+      expect(blocks.map((b) => `${b.startTime}-${b.endTime}`)).toEqual(["09:00-13:00"]);
+    }
+  });
 });
 
 describe("coversTimeWindow", () => {

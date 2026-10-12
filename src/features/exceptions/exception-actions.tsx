@@ -18,12 +18,13 @@ import {
 
 interface ExceptionActionsProps {
   exceptionId: string;
-  action: "approve" | "decline" | "cancel";
+  action: "approve" | "decline" | "withdraw" | "cancel";
 }
 
 export function ExceptionActions({ exceptionId, action }: ExceptionActionsProps) {
   const [pending, startTransition] = useTransition();
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [reason, setReason] = useState("");
 
   function run(fn: () => Promise<{ error?: string; success?: boolean } | void>, successMsg: string) {
@@ -34,21 +35,75 @@ export function ExceptionActions({ exceptionId, action }: ExceptionActionsProps)
       } else {
         toast.success(successMsg);
         setRejectOpen(false);
+        setConfirmOpen(false);
         setReason("");
       }
     });
   }
 
+  if (action === "withdraw") {
+    return (
+      <>
+        <Button variant="outline" size="sm" disabled={pending} onClick={() => setConfirmOpen(true)}>
+          Withdraw request
+        </Button>
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent onClose={() => setConfirmOpen(false)}>
+            <DialogHeader>
+              <DialogTitle>Withdraw this pending request?</DialogTitle>
+              <DialogDescription>
+                Supervisors will no longer see it in review. The request stays in your exception
+                history.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
+                Keep request
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={pending}
+                onClick={() => run(() => cancelExceptionAction(exceptionId), "Exception withdrawn.")}
+              >
+                Withdraw request
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
   if (action === "cancel") {
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={pending}
-        onClick={() => run(() => cancelExceptionAction(exceptionId), "Exception cancelled")}
-      >
-        Cancel request
-      </Button>
+      <>
+        <Button variant="outline" size="sm" disabled={pending} onClick={() => setConfirmOpen(true)}>
+          Cancel exception
+        </Button>
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent onClose={() => setConfirmOpen(false)}>
+            <DialogHeader>
+              <DialogTitle>Cancel this approved exception?</DialogTitle>
+              <DialogDescription>
+                Your normal weekly availability will apply again for this period. The cancellation
+                will remain in history.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
+                Keep exception
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={pending}
+                onClick={() => run(() => cancelExceptionAction(exceptionId), "Exception cancelled.")}
+              >
+                Cancel exception
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 

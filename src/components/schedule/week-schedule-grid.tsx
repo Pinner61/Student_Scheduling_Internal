@@ -45,8 +45,10 @@ export function WeekScheduleGrid({
   return (
     <div className="overflow-x-auto rounded-lg border bg-white">
       <div
-        className="grid min-w-[640px]"
-        style={{ gridTemplateColumns: `4.5rem repeat(${dates.length}, minmax(0, 1fr))` }}
+        className="grid w-max min-w-full"
+        style={{
+          gridTemplateColumns: `minmax(4.75rem, 4.75rem) repeat(${dates.length}, minmax(7rem, 1fr))`,
+        }}
       >
         <div className="sticky left-0 z-10 border-b bg-white px-2 py-2 text-xs font-medium text-[var(--color-muted-foreground)]">
           Time

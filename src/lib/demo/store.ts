@@ -377,16 +377,66 @@ export function reviewException(
   return exception;
 }
 
-export function cancelException(
+export function getExceptionById(exceptionId: string): ScheduleException | undefined {
+  return getStore().exceptions.find((e) => e.id === exceptionId);
+}
+
+export function withdrawException(
   exceptionId: string,
   actorId: string
 ): ScheduleException | undefined {
-  const exception = getStore().exceptions.find((e) => e.id === exceptionId);
-  if (!exception || exception.status !== "PENDING") return undefined;
+  const exception = getExceptionById(exceptionId);
+  if (!exception) return undefined;
+  if (exception.status !== "PENDING") {
+    throw new AppError("Only pending requests can be withdrawn.", "conflict");
+  }
+  const prior = exception.status;
+  exception.status = "WITHDRAWN";
+  exception.updatedAt = new Date().toISOString();
+  addAuditLog(actorId, "exception_withdrawn", "schedule_exception", exceptionId, {
+    priorStatus: prior,
+    resultingStatus: exception.status,
+  });
+  return exception;
+}
+
+export function cancelApprovedException(
+  exceptionId: string,
+  actorId: string,
+  today: string
+): ScheduleException | undefined {
+  const exception = getExceptionById(exceptionId);
+  if (!exception) return undefined;
+  if (exception.status !== "APPROVED") {
+    throw new AppError("Only approved exceptions can be cancelled.", "conflict");
+  }
+  if (exception.exceptionDate < today) {
+    throw new AppError("Past exceptions stay in history and cannot be cancelled.", "conflict");
+  }
+  const prior = exception.status;
   exception.status = "CANCELLED";
   exception.updatedAt = new Date().toISOString();
-  addAuditLog(actorId, "exception_cancelled", "schedule_exception", exceptionId);
+  addAuditLog(actorId, "exception_cancelled", "schedule_exception", exceptionId, {
+    priorStatus: prior,
+    resultingStatus: exception.status,
+  });
   return exception;
+}
+
+export function cancelException(
+  exceptionId: string,
+  actorId: string,
+  today = getTodayDateString()
+): ScheduleException | undefined {
+  const exception = getExceptionById(exceptionId);
+  if (!exception) return undefined;
+  if (exception.status === "PENDING") {
+    return withdrawException(exceptionId, actorId);
+  }
+  if (exception.status === "APPROVED") {
+    return cancelApprovedException(exceptionId, actorId, today);
+  }
+  throw new AppError("This exception can no longer be changed.", "conflict");
 }
 
 export function getAllTeams(): Team[] {
@@ -477,6 +527,7 @@ export function updateUserTeam(
   actorId: string
 ): void {
   const db = getStore();
+  const previous = db.memberships.find((m) => m.userId === userId);
   db.memberships = db.memberships.filter((m) => m.userId !== userId);
   if (teamId) {
     if (!db.teams.some((t) => t.id === teamId)) {
@@ -490,7 +541,16 @@ export function updateUserTeam(
       createdAt: new Date().toISOString(),
     });
   }
-  addAuditLog(actorId, "team_assignment_changed", "profile", userId, { teamId });
+  addAuditLog(actorId, "team_assignment_changed", "profile", userId, {
+    teamId,
+    previousTeamId: previous?.teamId ?? null,
+  });
+  if (previous?.teamId && previous.teamId !== teamId) {
+    addAuditLog(actorId, "team_member_removed", "team", previous.teamId, { userId });
+  }
+  if (teamId && previous?.teamId !== teamId) {
+    addAuditLog(actorId, "team_member_added", "team", teamId, { userId });
+  }
 }
 
 export function createTeam(

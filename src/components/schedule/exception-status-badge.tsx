@@ -7,6 +7,7 @@ const config: Record<ExceptionStatus, { variant: "success" | "warning" | "danger
   APPROVED: { variant: "success" },
   DECLINED: { variant: "danger" },
   CANCELLED: { variant: "neutral" },
+  WITHDRAWN: { variant: "neutral" },
 };
 
 export function ExceptionStatusBadge({ status }: { status: ExceptionStatus }) {

@@ -35,6 +35,7 @@ export function ExceptionFilters({ teams, students, basePath }: ExceptionFilters
         <option value="APPROVED">Approved</option>
         <option value="DECLINED">Rejected</option>
         <option value="CANCELLED">Cancelled</option>
+        <option value="WITHDRAWN">Withdrawn</option>
       </Select>
       <Select
         aria-label="Filter by type"
