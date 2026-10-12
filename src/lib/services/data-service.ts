@@ -20,6 +20,7 @@ import {
   getEffectiveScheduleForDate,
   getEffectiveScheduleForWeek,
   getCurrentWeekStart,
+  getTodayDateString,
 } from "@/lib/schedule/engine";
 import { findCommonAvailabilityWindows } from "@/lib/schedule/common-availability";
 import { addDaysToDateString, rangesOverlap } from "@/lib/utils/time";
@@ -235,14 +236,24 @@ export function cancelExceptionRequest(
   user: SessionUser,
   exceptionId: string
 ): ScheduleException | undefined {
-  const exception = demo.getAllExceptions().find((e) => e.id === exceptionId);
+  const exception = demo.getExceptionById(exceptionId);
   if (!exception) return undefined;
   if (exception.userId !== user.id) {
-    requirePermission(user, "review:exceptions");
-  } else {
-    requirePermission(user, "cancel:own_exceptions");
+    throw new AppError("You can only change your own exceptions.", "unauthorized");
   }
-  return demo.cancelException(exceptionId, user.id);
+  requirePermission(user, "cancel:own_exceptions");
+  const today = getTodayDateString();
+  const updated =
+    exception.status === "PENDING"
+      ? demo.withdrawException(exceptionId, user.id)
+      : demo.cancelApprovedException(exceptionId, user.id, today);
+  if (updated?.status === "WITHDRAWN") {
+    notifyExceptionWithdrawn(updated);
+  }
+  if (updated?.status === "CANCELLED") {
+    notifyExceptionCancelled(updated);
+  }
+  return updated;
 }
 
 export function getEffectiveSchedule(
@@ -333,7 +344,7 @@ export function findCommonAvailability(params: {
     ? authorized.filter((student) => params.studentIds!.includes(student.id))
     : authorized;
   if (selected.length === 0) {
-    throw new AppError("Select at least one authorized student.", "validation");
+    return { students: [], full: [], partial: [] };
   }
 
   const students = selected.map((student) => {
@@ -497,11 +508,84 @@ export function assignSupervisor(
   requirePermission(user, "write:teams");
   if (supervisorId) {
     const supervisor = demo.getProfileById(supervisorId);
-    if (!supervisor || supervisor.role !== "supervisor") {
-      throw new AppError("Choose an active supervisor.", "validation");
+    if (!isTeamLeadCandidate(supervisor)) {
+      throw new AppError("Choose an active supervisor or administrator.", "validation");
     }
   }
   return demo.updateTeam(teamId, { supervisorId }, user.id);
+}
+
+function isTeamLeadCandidate(profile: Profile | undefined): boolean {
+  return Boolean(
+    profile &&
+      profile.status === "active" &&
+      (profile.role === "supervisor" || profile.role === "administrator")
+  );
+}
+
+export function saveTeamEdits(
+  user: SessionUser,
+  teamId: string,
+  input: {
+    name: string;
+    description: string;
+    supervisorId: string | null;
+    memberIds: string[];
+  }
+): Team {
+  requirePermission(user, "write:teams");
+  const team = demo.getAllTeams().find((item) => item.id === teamId);
+  if (!team) {
+    throw new AppError("That team does not exist.", "not_found");
+  }
+  const name = input.name.trim();
+  if (!name) {
+    throw new AppError("Enter a team name.", "validation");
+  }
+  if (input.supervisorId) {
+    const supervisor = demo.getProfileById(input.supervisorId);
+    if (!isTeamLeadCandidate(supervisor)) {
+      throw new AppError("Choose an active supervisor or administrator.", "validation");
+    }
+  }
+
+  const uniqueMemberIds = Array.from(new Set(input.memberIds));
+  for (const memberId of uniqueMemberIds) {
+    const profile = demo.getProfileById(memberId);
+    if (!profile || profile.status !== "active" || profile.role !== "student") {
+      throw new AppError("Team members must be active students.", "validation");
+    }
+  }
+
+  const currentMembers = demo.getTeamMembers(teamId).filter((member) => member.role === "student");
+  const currentIds = new Set(currentMembers.map((member) => member.id));
+  const nextIds = new Set(uniqueMemberIds);
+
+  const updated = demo.updateTeam(
+    teamId,
+    {
+      name,
+      description: input.description.trim() || null,
+      supervisorId: input.supervisorId,
+    },
+    user.id
+  );
+  if (!updated) {
+    throw new AppError("Unable to update that team.", "unavailable");
+  }
+
+  for (const member of currentMembers) {
+    if (!nextIds.has(member.id)) {
+      demo.updateUserTeam(member.id, null, user.id);
+    }
+  }
+  for (const memberId of uniqueMemberIds) {
+    if (!currentIds.has(memberId)) {
+      demo.updateUserTeam(memberId, teamId, user.id);
+    }
+  }
+
+  return updated;
 }
 
 export function createTeam(
@@ -766,6 +850,34 @@ function notifyExceptionReviewed(exception: ScheduleException) {
       exceptionId: exception.id,
       reviewNote: exception.reviewNote,
     },
+  });
+}
+
+function notifyExceptionWithdrawn(exception: ScheduleException) {
+  const teamId = demo.getUserTeamId(exception.userId);
+  const team = teamId ? demo.getAllTeams().find((t) => t.id === teamId) : undefined;
+  const student = demo.getProfileById(exception.userId);
+  if (!team?.supervisorId || !student) return;
+  demo.createNotification({
+    userId: team.supervisorId,
+    eventType: "exception_withdrawn",
+    title: "Exception request withdrawn",
+    body: `${student.firstName} ${student.lastName} withdrew an exception request for ${exception.exceptionDate}.`,
+    metadata: { exceptionId: exception.id, studentId: student.id },
+  });
+}
+
+function notifyExceptionCancelled(exception: ScheduleException) {
+  const teamId = demo.getUserTeamId(exception.userId);
+  const team = teamId ? demo.getAllTeams().find((t) => t.id === teamId) : undefined;
+  const student = demo.getProfileById(exception.userId);
+  if (!team?.supervisorId || !student) return;
+  demo.createNotification({
+    userId: team.supervisorId,
+    eventType: "exception_cancelled",
+    title: "Approved exception cancelled",
+    body: `${student.firstName} ${student.lastName} cancelled an approved exception for ${exception.exceptionDate}. Weekly availability applies again.`,
+    metadata: { exceptionId: exception.id, studentId: student.id },
   });
 }
 

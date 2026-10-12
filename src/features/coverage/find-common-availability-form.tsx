@@ -98,22 +98,30 @@ export function FindCommonAvailabilityForm({
             Leave unselected to include every authorized student in the chosen team.
           </p>
           <div className="grid max-h-40 gap-1 overflow-y-auto rounded-md border p-2 sm:grid-cols-2">
-            {students.map((student) => (
-              <label key={student.id} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="students"
-                  value={student.id}
-                  defaultChecked={defaults.students?.includes(student.id)}
-                />
-                {student.firstName} {student.lastName}
-              </label>
-            ))}
+            {students.length === 0 ? (
+              <p className="px-1 py-2 text-sm text-[var(--color-muted-foreground)]">
+                No students are assigned to this team yet.
+              </p>
+            ) : (
+              students.map((student) => (
+                <label key={student.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="students"
+                    value={student.id}
+                    defaultChecked={defaults.students?.includes(student.id)}
+                  />
+                  {student.firstName} {student.lastName}
+                </label>
+              ))
+            )}
           </div>
         </fieldset>
       </div>
       <div className="flex items-end">
-        <Button type="submit">Find Common Availability</Button>
+        <Button type="submit" disabled={students.length === 0}>
+          Find Common Availability
+        </Button>
       </div>
     </form>
   );

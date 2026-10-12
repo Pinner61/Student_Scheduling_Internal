@@ -4,7 +4,8 @@ import type { RecurringAvailability, ScheduleBlock, ScheduleException } from "@/
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExceptionStatusBadge } from "@/components/schedule/exception-status-badge";
 import { ExceptionActions } from "@/features/exceptions/exception-actions";
-import { formatTimeRange } from "@/lib/utils/time";
+import { formatFriendlyDate, formatTimeRange } from "@/lib/utils/time";
+import { EXCEPTION_TYPE_LABEL, workModeLabel } from "@/components/schedule/schedule-language";
 
 interface ExceptionReviewCardProps {
   exception: ScheduleException;
@@ -44,11 +45,9 @@ export function ExceptionReviewCard({
         <div className="grid gap-4 text-sm sm:grid-cols-3">
           <div>
             <h4 className="mb-1 font-medium">Requested change</h4>
-            <p>{format(parseISO(exception.exceptionDate), "MMM d, yyyy", { locale: enUS })}</p>
+            <p>{formatFriendlyDate(exception.exceptionDate)}</p>
             <p>{formatTimeRange(exception.startTime, exception.endTime)}</p>
-            <p className="capitalize">
-              {exception.exceptionType.replace(/_/g, " ").toLowerCase()}
-            </p>
+            <p>{EXCEPTION_TYPE_LABEL[exception.exceptionType] ?? exception.exceptionType}</p>
             {exception.reason && (
               <p className="mt-1 text-[var(--color-muted-foreground)]">{exception.reason}</p>
             )}
@@ -60,7 +59,7 @@ export function ExceptionReviewCard({
             ) : (
               normalBlocks.map((b) => (
                 <p key={b.id}>
-                  {formatTimeRange(b.startTime, b.endTime)} ({b.workMode})
+                  {formatTimeRange(b.startTime, b.endTime)} ({workModeLabel(b.workMode)})
                 </p>
               ))
             )}
@@ -72,7 +71,7 @@ export function ExceptionReviewCard({
             ) : (
               previewBlocks.map((b, i) => (
                 <p key={`${b.startTime}-${i}`}>
-                  {formatTimeRange(b.startTime, b.endTime)} ({b.workMode})
+                  {formatTimeRange(b.startTime, b.endTime)} ({workModeLabel(b.workMode)})
                 </p>
               ))
             )}
@@ -99,7 +98,7 @@ export function ExceptionReviewCard({
           <ExceptionActions exceptionId={exception.id} action="approve" />
         )}
         {showCancel && exception.status === "PENDING" && (
-          <ExceptionActions exceptionId={exception.id} action="cancel" />
+          <ExceptionActions exceptionId={exception.id} action="withdraw" />
         )}
       </CardContent>
     </Card>

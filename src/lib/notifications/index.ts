@@ -5,6 +5,8 @@ export type NotificationEventName =
   | "exception_submitted"
   | "exception_approved"
   | "exception_declined"
+  | "exception_withdrawn"
+  | "exception_cancelled"
   | "schedule_changed"
   | "schedule_submitted"
   | "period_opened"

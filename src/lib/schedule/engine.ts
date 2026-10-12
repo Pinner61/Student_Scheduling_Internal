@@ -5,6 +5,7 @@ import type {
   TimeRange,
   WorkMode,
 } from "@/types";
+import { isEffectiveException } from "@/lib/schedule/exceptions";
 import {
   compareTimes,
   formatBusinessDate,
@@ -87,7 +88,7 @@ export function applyExceptionToBlocks(
   blocks: ScheduleBlock[],
   exception: ScheduleException
 ): ScheduleBlock[] {
-  if (exception.status !== "APPROVED") return blocks;
+  if (!isEffectiveException(exception)) return blocks;
 
   const { exceptionType, startTime, endTime, replacementMode } = exception;
   let result = [...blocks];
@@ -218,7 +219,7 @@ export function getEffectiveScheduleForDate(
 ): ScheduleBlock[] {
   let blocks = mergeAdjacentScheduleBlocks(recurringToBlocksForDate(recurring, date));
   const dayExceptions = exceptions
-    .filter((e) => e.exceptionDate === date && e.status === "APPROVED")
+    .filter((e) => e.exceptionDate === date && isEffectiveException(e))
     .sort((a, b) => compareTimes(a.startTime, b.startTime));
 
   for (const exception of dayExceptions) {
@@ -295,7 +296,7 @@ export function exceptionCoveringSlot(
   const slotEnd = minutesToTime(timeToMinutes(slotStart) + intervalMinutes);
   return exceptions.find(
     (e) =>
-      e.status === "APPROVED" &&
+      isEffectiveException(e) &&
       e.exceptionDate === date &&
       rangesOverlap(e.startTime, e.endTime, slotStart, slotEnd)
   );

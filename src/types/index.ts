@@ -6,7 +6,7 @@ export type ExceptionType =
   | "REMOTE_INSTEAD"
   | "OFFICE_INSTEAD"
   | "ALTERNATE_AVAILABILITY";
-export type ExceptionStatus = "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED";
+export type ExceptionStatus = "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED" | "WITHDRAWN";
 export type TeamStatus = "active" | "archived";
 export type ScheduleStatus = "submitted" | "not_started";
 export type SchedulePeriodStatus = "DRAFT" | "OPEN" | "CLOSED" | "ARCHIVED";
@@ -21,6 +21,7 @@ export type AuditAction =
   | "exception_approved"
   | "exception_declined"
   | "exception_cancelled"
+  | "exception_withdrawn"
   | "user_created"
   | "user_invited"
   | "user_activated"
@@ -33,6 +34,8 @@ export type AuditAction =
   | "team_created"
   | "team_updated"
   | "team_archived"
+  | "team_member_added"
+  | "team_member_removed"
   | "settings_changed"
   | "schedule_period_created"
   | "schedule_period_updated"

@@ -1,5 +1,4 @@
-import { format, parseISO, addDays, format as formatDate } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { parseISO, addDays, format as formatDate } from "date-fns";
 import {
   getAvailability,
   getEffectiveWeekSchedule,
@@ -11,7 +10,7 @@ import { getCurrentWeekStart, getTodayDateString } from "@/lib/schedule/engine";
 import { WeekScheduleGrid } from "@/components/schedule/week-schedule-grid";
 import { ExceptionStatusBadge } from "@/components/schedule/exception-status-badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatTimeRange, formatWeekRange } from "@/lib/utils/time";
+import { formatFriendlyDate, formatTimeRange, formatWeekRange } from "@/lib/utils/time";
 import {
   EXCEPTION_TYPE_LABEL,
   scheduleStatusLabel,
@@ -87,13 +86,13 @@ export function StudentScheduleDetail({ userId }: { userId: string }) {
         <CardContent>
           {upcoming.length === 0 ? (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              No pending or approved exceptions coming up.
+              No upcoming approved changes.
             </p>
           ) : (
             <ul className="space-y-2">
               {upcoming.map((ex) => (
                 <li key={ex.id} className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                  <span className="font-medium">{format(parseISO(ex.exceptionDate), "MMM d", { locale: enUS })}</span>
+                  <span className="font-medium">{formatFriendlyDate(ex.exceptionDate)}</span>
                   <span>{EXCEPTION_TYPE_LABEL[ex.exceptionType]}</span>
                   <span>{formatTimeRange(ex.startTime, ex.endTime)}</span>
                   <ExceptionStatusBadge status={ex.status} />

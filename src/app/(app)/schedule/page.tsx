@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { addDays, format, parseISO } from "date-fns";
-import { enUS } from "date-fns/locale";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   getCurrentWeekStart,
@@ -22,10 +21,12 @@ import { Badge } from "@/components/ui/badge";
 import { ExceptionStatusBadge } from "@/components/schedule/exception-status-badge";
 import { WeekScheduleGrid } from "@/components/schedule/week-schedule-grid";
 import { WorkModeBadge } from "@/components/schedule/work-mode-badge";
-import { formatTimeRange, formatWeekRange, formatLongWeekday } from "@/lib/utils/time";
+import { formatTimeRange, formatWeekRange, formatLongWeekday, formatFriendlyDate } from "@/lib/utils/time";
 import { EXCEPTION_TYPE_LABEL } from "@/components/schedule/schedule-language";
 import { ShareAvailabilityButton } from "@/features/availability/share-availability-button";
 import { ScheduleLifecycleBar } from "@/features/schedule/schedule-lifecycle-bar";
+import { ExceptionActions } from "@/features/exceptions/exception-actions";
+import { canCancelApprovedException } from "@/lib/schedule/exceptions";
 
 export default async function ScheduleHomePage() {
   const user = await getSessionUser();
@@ -77,7 +78,11 @@ export default async function ScheduleHomePage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {todayBlocks.length === 0 ? (
-            <p className="text-sm">You’re not scheduled today.</p>
+            <p className="text-sm">
+              {profile?.scheduleStatus === "not_started" && recurring.length === 0
+                ? "No schedule has been submitted for this period."
+                : "You’re not scheduled today."}
+            </p>
           ) : (
             <ul className="space-y-2">
               {todayBlocks.map((block) => (
@@ -144,8 +149,7 @@ export default async function ScheduleHomePage() {
         <CardContent>
           {upcomingExceptions.length === 0 ? (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              No approved upcoming exceptions. Pending requests appear under Exceptions → Pending
-              Supervisor Approval.
+              No upcoming approved changes.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -154,12 +158,17 @@ export default async function ScheduleHomePage() {
                   key={ex.id}
                   className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm"
                 >
-                  <span className="font-medium">{format(parseISO(ex.exceptionDate), "MMM d", { locale: enUS })}</span>
+                  <span className="font-medium">{formatFriendlyDate(ex.exceptionDate)}</span>
                   <span>{EXCEPTION_TYPE_LABEL[ex.exceptionType]}</span>
                   <span className="text-[var(--color-muted-foreground)]">
                     {formatTimeRange(ex.startTime, ex.endTime)}
                   </span>
                   <ExceptionStatusBadge status={ex.status} />
+                  {canCancelApprovedException(ex, user.id, today) ? (
+                    <div className="ml-auto">
+                      <ExceptionActions exceptionId={ex.id} action="cancel" />
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>

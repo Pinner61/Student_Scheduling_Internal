@@ -10,7 +10,6 @@ interface WindowResult extends CommonAvailabilityWindow {
 export function CommonAvailabilityResults({
   full,
   partial,
-  total,
 }: {
   full: WindowResult[];
   partial: WindowResult[];
@@ -29,7 +28,7 @@ export function CommonAvailabilityResults({
         <CardContent>
           {full.length === 0 ? (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              No windows where all {total} selected students are available.
+              No time currently satisfies the selected students and duration.
             </p>
           ) : (
             <ul className="space-y-2">

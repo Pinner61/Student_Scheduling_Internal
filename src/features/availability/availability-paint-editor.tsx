@@ -156,7 +156,7 @@ export function AvailabilityPaintEditor({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <div className="space-y-2">
         <p className="text-sm font-medium">Schedule tool</p>
         <div
@@ -174,7 +174,7 @@ export function AvailabilityPaintEditor({
                 aria-checked={selected}
                 onClick={() => setTool(item)}
                 className={cn(
-                  "min-w-24 rounded-md px-4 py-2 text-sm font-semibold transition-all",
+                  "min-w-24 shrink-0 rounded-md px-4 py-2 text-sm font-semibold transition-all",
                   item === "OFFICE" && selected && "bg-sky-600 text-white shadow",
                   item === "REMOTE" && selected && "bg-violet-600 text-white shadow",
                   item === "CLEAR" && selected && "bg-stone-700 text-white shadow",
@@ -199,23 +199,31 @@ export function AvailabilityPaintEditor({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border bg-white">
+      <div
+        data-testid="availability-grid-scroller"
+        className="min-w-0 overflow-auto rounded-lg border bg-white md:max-h-[min(70dvh,calc(100dvh-18rem))]"
+      >
         <div
-          className="grid min-w-[720px] select-none"
-          style={{ gridTemplateColumns: `4.5rem repeat(5, minmax(0, 1fr))` }}
+          className="grid w-max min-w-full select-none"
+          style={{ gridTemplateColumns: `minmax(4.75rem, 4.75rem) repeat(5, minmax(8rem, 1fr))` }}
           onPointerLeave={() => {
             painting.current = false;
           }}
         >
-          <div className="sticky left-0 z-10 border-b bg-white px-2 py-2 text-xs font-medium">Time</div>
+          <div className="sticky left-0 z-10 h-10 shrink-0 border-b bg-white px-2 py-2 text-xs font-medium">
+            Time
+          </div>
           {WEEKDAYS.map((day) => (
-            <div key={day} className="border-b px-2 py-2 text-center text-sm font-semibold">
+            <div
+              key={day}
+              className="h-10 min-w-[8rem] shrink-0 border-b px-2 py-2 text-center text-sm font-semibold"
+            >
               {getDayName(day)}
             </div>
           ))}
           {slotStarts.map((slot) => (
             <div key={slot} className="contents">
-              <div className="sticky left-0 z-10 border-t bg-white px-2 py-1 text-[11px] text-[var(--color-muted-foreground)]">
+              <div className="sticky left-0 z-10 flex h-10 min-h-10 shrink-0 items-center border-t bg-white px-2 text-[11px] text-[var(--color-muted-foreground)]">
                 {formatTime12(slot)}
               </div>
               {WEEKDAYS.map((day) => {
@@ -228,7 +236,7 @@ export function AvailabilityPaintEditor({
                     type="button"
                     aria-label={label}
                     className={cn(
-                      "min-h-9 border-t border-l text-[11px] font-medium",
+                      "h-10 min-h-10 min-w-[8rem] shrink-0 border-t border-l text-[11px] font-medium",
                       workModeCellClass(mode),
                       tool === "CLEAR" ? "cursor-cell" : "cursor-crosshair",
                       flashKey === key && "animate-cell-pulse"
@@ -275,7 +283,10 @@ export function AvailabilityPaintEditor({
         </div>
       </div>
 
-      <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-[var(--color-background)] py-4">
+      <div
+        data-testid="availability-action-bar"
+        className="flex shrink-0 flex-wrap gap-2 border-t border-[var(--color-border)] bg-[var(--color-background)] pt-3"
+      >
         <Button onClick={handleSave} disabled={saving || !dirty || readOnly}>
           {saving ? "Saving…" : "Save Availability"}
         </Button>

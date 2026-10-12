@@ -14,6 +14,7 @@ import { CoverageFilters } from "@/features/coverage/coverage-filters";
 import { DayTeamGrid } from "@/features/coverage/day-team-grid";
 import { WeekTeamGrid } from "@/features/coverage/week-team-grid";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -160,6 +161,12 @@ export default async function SupervisorTeamPage({ searchParams }: PageProps) {
         />
       </Suspense>
 
+      {supervisorTeams.length === 0 ? (
+        <EmptyState
+          title="No assigned teams"
+          description="You don’t currently supervise any active teams."
+        />
+      ) : (
       <Card>
         <CardHeader>
           <CardTitle>{team?.name ?? "Assigned teams"}</CardTitle>
@@ -190,6 +197,7 @@ export default async function SupervisorTeamPage({ searchParams }: PageProps) {
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

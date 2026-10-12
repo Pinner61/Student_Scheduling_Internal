@@ -41,6 +41,8 @@ export function exceptionStatusLabel(status: ExceptionStatus): string {
       return "Rejected";
     case "CANCELLED":
       return "Cancelled";
+    case "WITHDRAWN":
+      return "Withdrawn";
   }
 }
 
@@ -61,6 +63,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   exception_approved: "Approved an exception",
   exception_declined: "Rejected an exception",
   exception_cancelled: "Cancelled an exception",
+  exception_withdrawn: "Withdrew an exception",
   user_created: "Created a user",
   user_updated: "Updated a user",
   user_role_changed: "Changed a user role",
@@ -71,6 +74,8 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   team_created: "Created a team",
   team_updated: "Updated a team",
   team_archived: "Archived a team",
+  team_member_added: "Added a team member",
+  team_member_removed: "Removed a team member",
   settings_changed: "Changed settings",
   schedule_submitted: "Submitted a schedule",
   schedule_reopened: "Reopened a submitted schedule",

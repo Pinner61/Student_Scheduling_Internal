@@ -45,4 +45,12 @@ describe("student exception visibility", () => {
     ]);
     expect(items.map((e) => e.id)).toEqual(["p", "a"]);
   });
+
+  it("keeps withdrawn and cancelled exceptions in student history", () => {
+    const items = studentVisibleExceptions([
+      exception({ id: "w", status: "WITHDRAWN" }),
+      exception({ id: "c", status: "CANCELLED" }),
+    ]);
+    expect(items.map((e) => e.id)).toEqual(["w", "c"]);
+  });
 });

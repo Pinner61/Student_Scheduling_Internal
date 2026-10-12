@@ -196,6 +196,11 @@ export default async function SupervisorOverviewPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {teams.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              You don’t currently supervise any active teams.
+            </p>
+          ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {teams.map((team) => {
               const coverage = getTeamCoverageData(team.id, today);
@@ -223,6 +228,7 @@ export default async function SupervisorOverviewPage() {
               );
             })}
           </div>
+          )}
           {settings.coverageThresholdsEnabled && (
             <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">
               Coverage thresholds are optional minimums for Office and Remote blocks during the
