@@ -1,0 +1,207 @@
+.propel .pillars {
+  background: var(--paper);
+  color: var(--ink);
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.propel .pillars-intro,
+.propel .pillars-layout {
+  width: min(var(--max), calc(100% - 2 * var(--gutter)));
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.propel .pillars h2 {
+  max-width: 16ch;
+}
+
+.propel .pillars-layout {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  align-items: center;
+}
+
+.propel .pillar-map,
+.propel .pillar-read {
+  min-width: 0;
+}
+
+.propel .pillar-map {
+  background: var(--asu-maroon);
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.propel .pillar-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.propel .pillar-ring,
+.propel .pillar-spoke {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.propel .pillar-ring {
+  stroke: var(--asu-gold);
+  stroke-width: 1.6;
+}
+
+.propel .pillar-spoke {
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 1.5;
+}
+
+.propel .pillar-center {
+  fill: var(--white);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.propel .pillar-node {
+  cursor: pointer;
+}
+
+.propel .pillar-node .node-hit {
+  fill: transparent;
+}
+
+.propel .pillar-node .ring {
+  fill: var(--white);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 2;
+}
+
+.propel .pillar-num {
+  fill: var(--asu-maroon);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.propel .pillar-choices {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.propel .pillar-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+  min-height: 52px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.propel .pillar-option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.propel .pillar-option-num {
+  color: var(--asu-maroon);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.propel .pillar-option-name {
+  font-size: clamp(1.05rem, 1.6vw, 1.28rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.propel .pillar-option:hover,
+.propel .pillar-option:focus-within,
+.propel .pillar-option:has(input:checked) {
+  background: var(--white);
+}
+
+.propel .pillar-option:focus-within {
+  outline: 3px solid var(--asu-gold);
+  outline-offset: 2px;
+}
+
+.propel .pillar-option:has(input:checked) {
+  border-left-color: var(--asu-gold);
+}
+
+.propel .pillar-panels {
+  margin-top: 0.75rem;
+  padding-top: 0.9rem;
+  border-top: 2px solid var(--asu-gold);
+  max-width: 38rem;
+}
+
+.propel .pillars:has(input[name="propel-pillar"]) .pillar-panel {
+  display: none;
+}
+
+.propel .pillars:has(input[value="flourishing"]:checked) [data-pillar-panel="flourishing"],
+.propel .pillars:has(input[value="life-design"]:checked) [data-pillar-panel="life-design"],
+.propel .pillars:has(input[value="analytics"]:checked) [data-pillar-panel="analytics"],
+.propel .pillars:has(input[value="tiered-care"]:checked) [data-pillar-panel="tiered-care"] {
+  display: block;
+}
+
+.propel .pillars:has(input[value="flourishing"]:checked) [data-spoke]:not([data-spoke="flourishing"]),
+.propel .pillars:has(input[value="life-design"]:checked) [data-spoke]:not([data-spoke="life-design"]),
+.propel .pillars:has(input[value="analytics"]:checked) [data-spoke]:not([data-spoke="analytics"]),
+.propel .pillars:has(input[value="tiered-care"]:checked) [data-spoke]:not([data-spoke="tiered-care"]) {
+  stroke: rgba(255, 255, 255, 0.28);
+}
+
+.propel .pillars:has(input[value="flourishing"]:checked) [data-spoke="flourishing"],
+.propel .pillars:has(input[value="life-design"]:checked) [data-spoke="life-design"],
+.propel .pillars:has(input[value="analytics"]:checked) [data-spoke="analytics"],
+.propel .pillars:has(input[value="tiered-care"]:checked) [data-spoke="tiered-care"] {
+  stroke: var(--asu-gold);
+  stroke-width: 2.6;
+}
+
+.propel .pillars:has(input[value="flourishing"]:checked) [data-pillar-node="flourishing"] .ring,
+.propel .pillars:has(input[value="life-design"]:checked) [data-pillar-node="life-design"] .ring,
+.propel .pillars:has(input[value="analytics"]:checked) [data-pillar-node="analytics"] .ring,
+.propel .pillars:has(input[value="tiered-care"]:checked) [data-pillar-node="tiered-care"] .ring {
+  stroke: var(--asu-gold);
+  stroke-width: 4;
+}
+
+.propel .pillar-panel h3 {
+  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 0.65rem;
+}
+
+.propel .pillar-panel p + p {
+  margin-top: 0.7rem;
+}
+
+.propel .pillar-panel p {
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+@media (min-width: 900px) {
+  .propel .pillars-layout {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  }
+}

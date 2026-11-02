@@ -1,0 +1,164 @@
+.propel .overview-panel {
+  padding: 0.25rem 0 clamp(2.5rem, 6vw, 4rem);
+}
+
+.propel .overview-board {
+  width: min(var(--max), calc(100% - 2 * var(--gutter)));
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.propel .overview-line {
+  position: relative;
+  height: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.propel .overview-line svg {
+  position: absolute;
+  left: 16.67%;
+  width: 66.66%;
+  top: 0.95rem;
+  height: 3px;
+}
+
+.propel .overview-line path {
+  fill: none;
+  stroke: var(--asu-maroon);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.propel .overview-dots {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.propel .overview-dots span {
+  width: 14px;
+  height: 14px;
+  margin: 0.5rem auto 0;
+  border: 2px solid var(--asu-maroon);
+  border-radius: 50%;
+  background: var(--white);
+  position: relative;
+}
+
+.propel .overview-dots span::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--asu-gold);
+}
+
+.propel .overview-grid {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.propel .overview-card {
+  min-width: 0;
+  padding: 1.25rem 0 0.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.propel .ov-num {
+  color: var(--asu-maroon);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.propel .ov-meta {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.propel .overview-card h3 {
+  margin-top: 0.3rem;
+  font-size: clamp(1.45rem, 2vw, 1.85rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.propel .ov-summary {
+  margin-top: 0.65rem;
+  line-height: 1.45;
+}
+
+.propel .ov-list {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  padding-left: 1.05rem;
+}
+
+.propel .ov-list li {
+  line-height: 1.4;
+}
+
+.propel .overview-card .further {
+  margin-top: 0.75rem;
+}
+
+.propel .ov-mark {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .propel .overview-line {
+    display: none;
+  }
+
+  .propel .overview-grid {
+    margin-left: 0.35rem;
+    border-left: 2px solid var(--asu-maroon);
+  }
+
+  .propel .overview-card {
+    position: relative;
+    padding: 1.15rem 0 0.35rem 1.15rem;
+    border-top: 0;
+  }
+
+  .propel .ov-mark {
+    display: block;
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    left: -7px;
+    top: 1.45rem;
+    border: 2px solid var(--asu-maroon);
+    border-radius: 50%;
+    background: var(--paper);
+  }
+
+  .propel .ov-mark::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: var(--asu-gold);
+  }
+}
+
+@media (min-width: 1024px) {
+  .propel .overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 1.5rem;
+  }
+
+  .propel .overview-card {
+    border-top: 0;
+    padding-top: 0.35rem;
+  }
+}

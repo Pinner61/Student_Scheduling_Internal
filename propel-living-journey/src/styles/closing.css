@@ -1,0 +1,101 @@
+.propel .close {
+  background: var(--white);
+  color: var(--ink);
+  padding: clamp(2.5rem, 6vw, 4rem) 0;
+  border-top: 8px solid var(--asu-gold);
+}
+
+.propel .close-inner {
+  width: min(var(--max), calc(100% - 2 * var(--gutter)));
+  margin-inline: auto;
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+  min-width: 0;
+}
+
+.propel .close-copy,
+.propel .close-mark {
+  min-width: 0;
+}
+
+.propel .close h2 {
+  max-width: 14ch;
+  color: var(--ink);
+}
+
+.propel .close p {
+  max-width: 36rem;
+  margin-top: 0.85rem;
+  font-size: 1.08rem;
+  line-height: 1.55;
+}
+
+.propel .close-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-top: 1.15rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 2px solid var(--asu-gold);
+  color: var(--asu-maroon);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+
+.propel .close-link:hover {
+  border-bottom-color: var(--asu-maroon);
+}
+
+.propel .close-meta {
+  margin-top: 1.25rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  letter-spacing: 0.03em;
+}
+
+.propel .close-svg {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
+  margin-inline: auto;
+}
+
+.propel .close-spine,
+.propel .close-branch,
+.propel .close-join {
+  fill: none;
+  stroke: var(--asu-maroon);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.propel .close-spine {
+  stroke-width: 1.8;
+}
+
+.propel .close-branch,
+.propel .close-join {
+  stroke-width: 1.35;
+}
+
+.propel .close-node {
+  fill: var(--white);
+  stroke: var(--asu-maroon);
+  stroke-width: 1.5;
+}
+
+.propel .close-core {
+  fill: var(--asu-gold);
+}
+
+@media (min-width: 800px) {
+  .propel .close-inner {
+    grid-template-columns: minmax(0, 1.15fr) minmax(180px, 0.7fr);
+  }
+
+  .propel .close-svg {
+    margin-inline: end;
+  }
+}
