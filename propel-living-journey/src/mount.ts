@@ -1,17 +1,20 @@
 /**
- * Mount boundary for the PROPEL living journey.
+ * Mount boundary for the PROPEL experience.
  *
  * The root element must already contain the semantic markup. This demo injects
- * that markup at build time from `src/content/roadmap.ts`. A Drupal template
- * can print the same structure and call `mountPropelJourney` when it attaches.
+ * that markup at build time. A Drupal template can print the same structure and
+ * call `mountPropelJourney` when it attaches.
  *
  * A second call on the same element returns the existing controller and does
  * not bind listeners again.
  */
+import { bindChoices, checkedHash } from "./behavior/choices";
+import { bindForm } from "./behavior/form";
 import { bindJourney } from "./behavior/journey";
-import { bindMode } from "./behavior/mode";
-import { bindPillars } from "./behavior/pillars";
 import type { MotionFlags } from "./behavior/motion";
+import { bindNav } from "./behavior/nav";
+import { bindPortraits, bindReveal } from "./behavior/reveal";
+import { createPillarLinks, type PillarLinksController } from "./viz/pillar-links";
 
 export interface PropelMountOptions {
   /** Force reduced motion on or off. Omit to follow the OS setting and `?motion=`. */
@@ -35,7 +38,7 @@ export function mountPropelJourney(root: HTMLElement, options: PropelMountOption
   if (existing && root.dataset.propelInitialized === "true") return existing;
 
   if (!root.querySelector(".hero")) {
-    console.warn("PROPEL: no journey markup found inside the mount element.");
+    console.warn("PROPEL: no experience markup found inside the mount element.");
     return {
       destroy() {},
       setStage() {},
@@ -50,8 +53,20 @@ export function mountPropelJourney(root: HTMLElement, options: PropelMountOption
   syncChrome(root);
 
   const journey = bindJourney(root, signal, motion);
-  bindMode(root, signal, motion, () => journey.refresh(true));
-  bindPillars(root, signal);
+  const pillarSvg = root.querySelector<SVGSVGElement>(".pillar-svg");
+  const pillars: PillarLinksController | null = pillarSvg ? createPillarLinks(pillarSvg) : null;
+
+  const paint = (animate = true) => {
+    journey.refresh(animate);
+    pillars?.setActive(checkedHash(root, "propel-pillar"), animate && !motion.reduced);
+  };
+
+  bindChoices(root, signal, () => paint(true));
+  bindNav(root, signal, motion);
+  bindForm(root, signal);
+  bindReveal(root, signal, motion);
+  bindPortraits(root, signal);
+  paint(false);
 
   root.classList.add("propel-enhanced");
   root.dataset.propelInitialized = "true";
@@ -61,24 +76,23 @@ export function mountPropelJourney(root: HTMLElement, options: PropelMountOption
     if (options.reducedMotion !== undefined || motionQuery() !== null) return;
     motion.reduced = media.matches;
     syncMotionClass(root, motion.reduced);
-    journey.refresh(true);
+    paint(false);
   };
   media.addEventListener("change", onPreference, { signal });
 
   const chrome = new ResizeObserver(() => syncChrome(root));
   const header = root.querySelector(".site-header");
-  const nav = root.querySelector(".journey-nav");
   if (header) chrome.observe(header);
-  if (nav) chrome.observe(nav);
   window.addEventListener("resize", () => syncChrome(root), { signal });
 
   const controller: PropelJourneyController = {
     destroy() {
       abort.abort();
       chrome.disconnect();
-      root.classList.remove("propel-enhanced", "propel-reduced");
+      journey.destroy();
+      pillars?.destroy();
+      root.classList.remove("propel-enhanced", "propel-reduced", "propel-motion-full");
       delete root.dataset.propelInitialized;
-      delete root.dataset.stageReady;
       controllers.delete(root);
       delete (root as PropelRoot).propelController;
     },
@@ -107,17 +121,14 @@ function resolveReduced(options: PropelMountOptions): boolean {
 
 function syncMotionClass(root: HTMLElement, reduced: boolean) {
   root.classList.toggle("propel-reduced", reduced);
+  root.classList.toggle("propel-motion-full", !reduced && motionQuery() === "full");
 }
 
 function syncChrome(root: HTMLElement) {
   const header = root.querySelector(".site-header");
-  const nav = root.querySelector(".journey-nav");
   if (header instanceof HTMLElement) {
-    root.style.setProperty("--header-h", `${header.offsetHeight}px`);
-  }
-  if (nav instanceof HTMLElement && window.matchMedia("(max-width: 1023px)").matches) {
-    root.style.setProperty("--nav-h", `${nav.offsetHeight}px`);
-  } else {
-    root.style.setProperty("--nav-h", "0px");
+    const height = header.offsetHeight;
+    root.style.setProperty("--header-h", `${height}px`);
+    document.documentElement.style.scrollPaddingTop = `${height + 16}px`;
   }
 }

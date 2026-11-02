@@ -1,191 +1,113 @@
-@keyframes propel-rise {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
+@keyframes propel-draw {
+  to { stroke-dashoffset: 0; }
 }
 
-@keyframes propel-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
+@keyframes propel-flow {
+  to { stroke-dashoffset: -96; }
+}
+
+@keyframes propel-fade {
+  to { opacity: 1; }
 }
 
 @keyframes propel-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.16);
-  }
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .propel:not(.propel-reduced) .hero-svg .draw:not([data-grow]) {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: propel-draw 1.5s var(--ease) forwards;
-  }
-
-  .propel:not(.propel-reduced) .hero-svg .draw-axis {
-    animation-duration: 1.35s;
-    animation-delay: 0.12s;
-  }
-
-  .propel:not(.propel-reduced) .hero-svg .draw-gold {
-    animation-delay: 0.28s;
-  }
-
-  .propel:not(.propel-reduced) .hero-svg .draw-branch {
-    animation-duration: 0.9s;
-  }
-
-  .propel:not(.propel-reduced) .hero-svg .draw-branch[data-index="0"] { animation-delay: 0.55s; }
-  .propel:not(.propel-reduced) .hero-svg .draw-branch[data-index="1"] { animation-delay: 0.78s; }
-  .propel:not(.propel-reduced) .hero-svg .draw-branch[data-index="2"] { animation-delay: 1.02s; }
-
-  .propel:not(.propel-reduced) .hero-svg .draw-join {
-    animation-duration: 0.85s;
-  }
-
-  .propel:not(.propel-reduced) .hero-svg .draw-join[data-index="0"] { animation-delay: 1.28s; }
-  .propel:not(.propel-reduced) .hero-svg .draw-join[data-index="1"] { animation-delay: 1.48s; }
-  .propel:not(.propel-reduced) .hero-svg .draw-join[data-index="2"] { animation-delay: 1.68s; }
-  .propel:not(.propel-reduced) .hero-svg .draw-join[data-index="3"] { animation-delay: 1.9s; }
-
-  .propel.propel-enhanced:not(.propel-reduced) [data-grow] {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    transition: stroke-dashoffset 0.45s var(--ease);
-  }
-
-  .propel.propel-enhanced:not(.propel-reduced) [data-grow-mark] {
-    opacity: 0;
-    transition: opacity 0.35s var(--ease);
-  }
-
-  .propel:not(.propel-reduced) .stage-node.is-active .node-ring {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: propel-pulse 2.4s ease-in-out infinite;
-  }
-
-  .propel:not(.propel-reduced) .hero-copy > * {
-    animation: propel-rise 0.8s var(--ease) both;
-  }
-
-  .propel:not(.propel-reduced) .hero-copy > *:nth-child(1) { animation-delay: 0.02s; }
-  .propel:not(.propel-reduced) .hero-copy > *:nth-child(2) { animation-delay: 0.08s; }
-  .propel:not(.propel-reduced) .hero-copy > *:nth-child(3) { animation-delay: 0.14s; }
-  .propel:not(.propel-reduced) .hero-copy > *:nth-child(4) { animation-delay: 0.2s; }
-  .propel:not(.propel-reduced) .hero-copy > *:nth-child(5) { animation-delay: 0.26s; }
-
-  .propel-enhanced:not(.propel-reduced) .chapter:not(.is-seen) .reveal {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  .propel-enhanced:not(.propel-reduced) .chapter.is-seen:not(.is-immediate) .chapter-head.reveal {
-    animation: propel-rise 0.7s var(--ease) forwards;
-  }
-
-  .propel-enhanced:not(.propel-reduced) [data-piece] {
-    opacity: 0;
-    transform: translateY(16px);
-    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
-  }
-
-  .propel-enhanced:not(.propel-reduced) [data-piece].is-open {
-    opacity: 1;
-    transform: none;
-  }
-
-  .propel-enhanced:not(.propel-reduced) .chapter-figure {
-    clip-path: inset(0 100% 0 0);
-  }
-
-  .propel-enhanced:not(.propel-reduced) .illus [data-step] {
-    transition: stroke-dashoffset 0.45s var(--ease);
-  }
-
-  .propel-enhanced:not(.propel-reduced) .illus [data-step-mark] {
-    opacity: 0;
-    transition: opacity 0.35s var(--ease);
-  }
-
-  .propel-enhanced:not(.propel-reduced) .illus .draw {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-  }
+@keyframes propel-panel {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
-.propel-enhanced:not(.propel-reduced) .layer-expansion,
-.propel-enhanced:not(.propel-reduced) .layer-flourishing {
-  opacity: 1;
+@keyframes propel-rise {
+  from { transform: translateY(14px); }
+  to { transform: none; }
 }
 
-.propel-reduced .layer-expansion,
-.propel-reduced .layer-flourishing {
-  opacity: 1;
+.propel-enhanced .reveal.is-in {
+  animation: propel-rise 0.6s var(--ease);
 }
 
-.propel-reduced .journey-svg[data-active="1"] .layer-expansion,
-.propel-reduced .journey-svg[data-active="2"] .layer-expansion,
-.propel-reduced .journey-svg[data-active="2"] .layer-flourishing {
-  opacity: 1;
+.propel-enhanced .frame-img {
+  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+}
+
+.propel-enhanced .frame-img:not(.is-ready) {
+  opacity: 0;
+}
+
+.propel .milestone[open] p {
+  animation: propel-panel 0.32s var(--ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .propel *,
-  .propel *::before,
-  .propel *::after {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
+  .propel:not(.propel-motion-full) .hero-path,
+  .propel:not(.propel-motion-full) .hero-flow,
+  .propel:not(.propel-motion-full) .hero-pulse,
+  .propel:not(.propel-motion-full) .year-node.is-active .year-ring,
+  .propel:not(.propel-motion-full) .pillar-panel,
+  .propel:not(.propel-motion-full) .tier-panel,
+  .propel:not(.propel-motion-full) .stage-panel,
+  .propel:not(.propel-motion-full) .milestone[open] p,
+  .propel:not(.propel-motion-full) .reveal.is-in,
+  .propel-reduced .hero-path,
+  .propel-reduced .hero-flow,
+  .propel-reduced .hero-pulse,
+  .propel-reduced .year-node.is-active .year-ring,
+  .propel-reduced .pillar-panel,
+  .propel-reduced .tier-panel,
+  .propel-reduced .stage-panel,
+  .propel-reduced .milestone[open] p,
+  .propel-reduced .reveal.is-in {
+    animation: none;
+  }
+
+  .propel:not(.propel-motion-full) .hero-path,
+  .propel-reduced .hero-path {
+    stroke-dashoffset: 0;
+  }
+
+  .propel:not(.propel-motion-full) .hero-flow,
+  .propel-reduced .hero-flow {
+    opacity: 0;
+  }
+
+  .propel:not(.propel-motion-full) .btn,
+  .propel:not(.propel-motion-full) .step,
+  .propel:not(.propel-motion-full) .choice label,
+  .propel:not(.propel-motion-full) .concept-choice,
+  .propel:not(.propel-motion-full) .concept-choice .choice-body,
+  .propel:not(.propel-motion-full) .frame-img,
+  .propel:not(.propel-motion-full) .portrait img,
+  .propel:not(.propel-motion-full) .team-group .person,
+  .propel-reduced .btn,
+  .propel-reduced .step,
+  .propel-reduced .choice label,
+  .propel-reduced .concept-choice,
+  .propel-reduced .concept-choice .choice-body,
+  .propel-reduced .frame-img,
+  .propel-reduced .portrait img,
+  .propel-reduced .team-group .person {
+    transition: none;
   }
 }
 
-.propel-reduced,
-.propel-reduced *,
-.propel-reduced *::before,
-.propel-reduced *::after {
-  animation: none !important;
-  transition: none !important;
-  scroll-behavior: auto !important;
+.propel-reduced .hero-path {
+  animation: none;
+  stroke-dashoffset: 0;
 }
 
-@media print {
-  .propel .site-header,
-  .propel .journey-svg,
-  .propel .mobile-rail,
-  .propel .viz-column,
-  .propel .cta,
-  .propel .mode-switch {
-    display: none !important;
-  }
+.propel-reduced .hero-flow,
+.propel-reduced .hero-pulse,
+.propel-reduced .year-node.is-active .year-ring,
+.propel-reduced .pillar-panel,
+.propel-reduced .tier-panel,
+.propel-reduced .stage-panel,
+.propel-reduced .reveal.is-in {
+  animation: none;
+}
 
-  .propel,
-  .propel .pillars,
-  .propel .close {
-    background: #fff !important;
-    color: #000 !important;
-  }
-
-  .propel .story-panel,
-  .propel .overview-panel,
-  .propel .pillar-panel {
-    display: block !important;
-  }
-
-  .propel .chapter {
-    min-height: 0 !important;
-    break-inside: avoid;
-  }
+.propel-reduced .hero-flow {
+  opacity: 0;
 }

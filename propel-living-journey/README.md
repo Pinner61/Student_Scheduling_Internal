@@ -1,8 +1,8 @@
-# PROPEL — The Living Journey
+# PROPEL: Empowered to flourish
 
-A standalone editorial prototype of Arizona State University’s Project PROPEL roadmap. It tells the three-year path — Infrastructure, Expansion, and Full Implementation — as one continuous journey, with a meeting-ready overview of the same content.
+A review prototype of the University College Project PROPEL page. It is a standalone Vite site in this folder, separate from the scheduling application at the repository root. Running `npm run dev` at the repository root starts that other app, not this site.
 
-This folder is separate from the scheduling application at the repository root. Running `npm run dev` in the repository root starts that other app, not this prototype.
+The page is for stakeholder review. It is not deployed and it does not change the live ASU website.
 
 ## Run it
 
@@ -13,6 +13,8 @@ npm run dev
 ```
 
 Open http://localhost:5173/
+
+The timeline prototype is at http://localhost:5173/timeline.html. It is a vertical alternating timeline. It opens with the three published PROPEL stages, then the Office of the President chronology from president.asu.edu, including that page’s pictures and Learn more links, through 2002. It is not an approved design. The journey section links to it.
 
 Production build:
 
@@ -33,44 +35,55 @@ npm test
 npm run typecheck
 ```
 
+## What the page contains
+
+The copy comes from the live PROPEL page and the University College project listing. See `CONTENT_SOURCES.md`.
+
+1. Hero — “PROPEL: Empowered to flourish”
+2. Flourishing is foundational, with real-time insights, adaptive support, and human connection
+3. Why it matters, and why PROPEL is different
+4. Four pillars, as one diagram with a detail panel
+5. Three tiers — Tier 3 universal, Tier 2 targeted, Tier 1 intensive
+6. Three-year journey — Infrastructure, Expansion, Full implementation
+7. Team, donor acknowledgment, and closing statement
+8. Contact form, wired for a future endpoint and honest when none is configured
+
 ## How to demonstrate it
 
-1. Start at the hero and choose **Explore the journey**.
-2. Scroll the story. The gold line advances with the reading position. It is a place marker, not a completion meter.
-3. Use the stage list, **Previous**, and **Next**. Arrow keys, Home, and End work when the stage navigation has focus.
-4. Open **Further reading** under a year for sourced notes.
-5. Switch **Story / Overview** to see all three years on one board.
-6. Select each of the four pillars. Keyboard and touch select the same explanation as a click.
-7. Add `?motion=reduce` to the URL to force the reduced-motion treatment, or `?motion=full` to force motion. `#propel-overview` opens Overview mode.
+1. Use **Explore the PROPEL model** or the page navigation.
+2. Choose a pillar. The line to the student and the detail panel change together.
+3. Choose a tier. Tier 3 is universal support. Tier 1 is intensive, one-to-one support.
+4. On the journey, choose a year, or use **Previous** and **Next**. Open a milestone.
+5. The contact form validates input. Without `data-form-endpoint`, a valid submit reports that the message was not sent.
 
-## Edit the roadmap
+`?motion=reduce` forces the reduced-motion treatment. `?motion=full` forces motion. On the timeline page, `#infrastructure`, `#expansion`, and `#implementation` jump to the PROPEL years. `#president-story`, `#p-latest`, `#p-2031`, and `#p-2025` through `#p-2002` jump through the presidential chronology. On the main page, the three stage hashes open the journey years, and `#flourishing`, `#life-design`, `#analytics`, and `#tiered-care` open those pillars.
 
-All visitor-facing copy lives in `src/content/roadmap.ts`. Story, overview, pillars, and the closing section read that file. Do not paste the same sentences into the visualization code.
+## Edit the copy
 
-Keep exactly three stages and four pillars. The renderer checks those counts. If a stage is renamed, keep its `id` (`infrastructure`, `expansion`, `implementation`) unless the figure and path code are updated to match.
-
-Do not add completion percentages, financial impact, or student-success statistics. The public window of November 2025 through November 2028 is provisional. Do not invent milestone dates.
+Visitor-facing text lives in `src/content/site.ts`. Do not paste the same sentences into the visualization code, and do not add completion percentages, retention claims, or people who are not on the official page.
 
 ## Structure
 
 | Path | Role |
 | --- | --- |
-| `src/content/roadmap.ts` | Editable content |
-| `src/types.ts` | Content types |
+| `src/content/site.ts` | Editable content |
 | `src/render/experience.ts` | Semantic HTML |
-| `src/render/diagrams.ts` | Hero, journey, pillar, and overview SVG |
-| `src/render/illustrations.ts` | Chapter figures |
-| `src/viz/geometry.ts` | D3 path and scale geometry |
-| `src/behavior/journey.ts` | Scroll position, stage state, keyboard nav |
-| `src/behavior/mode.ts` | Story / Overview |
-| `src/behavior/pillars.ts` | Pillar selection from the diagram |
+| `src/content/timeline.ts` | PROPEL timeline reading model, drawn from `site.ts` |
+| `src/content/president-timeline.ts` | Presidential chronology, links, and pictures from president.asu.edu |
+| `src/render/timeline.ts` | Vertical timeline markup |
+| `src/behavior/timeline.ts` | Scroll progress, year jumps, and the spoken year |
+| `timeline.html` | Standalone timeline prototype |
+| `src/viz/pathway.ts` | D3 year pathway |
+| `src/viz/pillar-links.ts` | D3 pillar connectors |
+| `src/behavior/` | Selection, journey, form, navigation |
 | `src/mount.ts` | Integration boundary |
 | `src/styles/` | Tokens and layout, scoped under `.propel` |
+| `public/media/` | Logo, team photographs, and pillar illustrations saved from the official page |
 | `docs/drupal-integration.md` | How a Drupal theme could include the build |
-| `docs/assumptions.md` | Decisions that need Des’s approval |
-| `docs/screenshots/` | Desktop and mobile captures from review |
+| `docs/contact-form.md` | What the contact form still needs |
+| `docs/assumptions.md` | Decisions that need review |
 
-`index.html` contains `<!--PROPEL-->`. Vite replaces that comment with the rendered experience, so the narrative is in the HTML before client JavaScript runs. Story / Overview, pillar explanations, and the expandable notes also work from native form controls and `<details>` if the script does not run.
+`index.html` contains `<!--PROPEL-->`. Vite replaces that comment with the rendered experience, so the narrative is in the HTML before client JavaScript runs. Pillar, tier, and year panels also switch with native radio buttons if the script does not run.
 
 ## Mounting elsewhere
 
@@ -87,6 +100,4 @@ journey.destroy();
 
 `window.PropelJourney.mount` is the same function. A second call on an element that is already mounted returns the existing controller.
 
-Set `data-show-chrome="false"` on the root to hide the prototype header. The Story / Overview control stays, because it is part of the experience.
-
-See `docs/drupal-integration.md` before placing this on a Webspark site.
+Set `data-show-chrome="false"` on the root to hide the prototype header and footer. The on-page section navigation stays. Set `data-form-endpoint` only when an approved receiver exists. See `docs/drupal-integration.md` and `docs/contact-form.md`.

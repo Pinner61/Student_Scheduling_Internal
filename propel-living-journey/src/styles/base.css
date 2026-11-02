@@ -1,70 +1,36 @@
 body.propel-standalone {
   margin: 0;
-  background: #fafafa;
-}
-
-.propel,
-.propel *,
-.propel *::before,
-.propel *::after {
-  box-sizing: border-box;
-}
-
-.propel h1,
-.propel h2,
-.propel h3,
-.propel h4,
-.propel p,
-.propel ul,
-.propel ol,
-.propel dl,
-.propel figure {
-  margin: 0;
-}
-
-.propel ul,
-.propel ol {
-  padding: 0;
-}
-
-.propel a {
-  color: var(--asu-maroon);
-}
-
-.propel button,
-.propel input,
-.propel summary {
-  font: inherit;
-  color: inherit;
-}
-
-.propel button {
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-}
-
-.propel img,
-.propel svg {
-  max-width: 100%;
-}
-
-.propel ::selection {
-  background: var(--asu-maroon);
-  color: var(--white);
-}
-
-.propel :focus {
-  outline: none;
+  background: #f6f3ee;
 }
 
 .propel :focus-visible {
-  outline: 3px solid var(--asu-maroon);
+  outline: 3px solid #191919;
   outline-offset: 3px;
 }
 
-.propel .sr {
+.propel .skip {
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  z-index: 40;
+  transform: translateY(-120%);
+  background: #8c1d40;
+  color: #fff;
+  padding: 0.6rem 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.propel .skip:focus {
+  transform: none;
+}
+
+.propel .wrap {
+  width: min(var(--max), calc(100% - (var(--gutter) * 2)));
+  margin-inline: auto;
+}
+
+.propel .visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -77,69 +43,186 @@ body.propel-standalone {
 }
 
 .propel .eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0 0 1rem;
+  margin: 0 0 0.65rem;
   color: var(--asu-maroon);
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.propel .eyebrow::before {
-  content: "";
-  width: 2rem;
-  height: 2px;
-  background: var(--asu-gold);
-  flex: none;
+.propel h1,
+.propel h2,
+.propel h3,
+.propel h4,
+.propel p {
+  overflow-wrap: break-word;
 }
 
-.propel .lede {
-  max-width: var(--measure);
-  font-size: clamp(1.15rem, 1.6vw, 1.35rem);
-  line-height: 1.45;
+.propel h1,
+.propel h2,
+.propel h3,
+.propel h4 {
   color: var(--ink);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
-.propel .timeline-note,
-.propel .progress-note,
-.propel .overview-note,
-.propel .pillar-source {
-  max-width: var(--measure);
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
+.propel h1 {
+  margin: 0;
+  font-size: clamp(2.35rem, 5vw, 4.15rem);
+  line-height: 1.02;
+  max-width: 11ch;
 }
 
-.propel .shell {
-  width: min(var(--max), calc(100% - 2 * var(--gutter)));
-  margin-inline: auto;
+.propel h2 {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  max-width: 18ch;
 }
 
-.propel #propel-main:focus-visible {
-  outline: none;
+.propel h3 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
 }
 
-.propel .journey,
-.propel .overview-panel,
-.propel .pillars,
-.propel .close,
-.propel .hero {
-  scroll-margin-top: var(--header-h);
+.propel h4 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  letter-spacing: 0;
 }
 
-@media (forced-colors: active) {
-  .propel {
-    background: Canvas;
-    color: CanvasText;
-  }
+.propel p {
+  margin: 0 0 0.9rem;
+}
 
-  .propel .pillars,
-  .propel .close {
-    background: Canvas;
-    color: CanvasText;
-    forced-color-adjust: none;
-  }
+.propel .lede,
+.propel .measure {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  max-width: 40rem;
+}
+
+.propel [id] {
+  scroll-margin-top: calc(var(--header-h) + 1rem);
+}
+
+.propel .section {
+  padding: 0 0 clamp(2.75rem, 5vw, 4rem);
+}
+
+.propel main > .section > .wrap,
+.propel main > .donors > .wrap {
+  border-top: 1px solid var(--rule);
+  padding-top: clamp(2.75rem, 5vw, 4rem);
+}
+
+.propel .band-dark {
+  background: #141414;
+  color: #f3f3f3;
+}
+
+.propel main > .band-dark > .wrap {
+  border-top-color: transparent;
+}
+
+.propel .band-dark h2,
+.propel .band-dark h3,
+.propel .band-dark h4,
+.propel .band-dark .choice-title {
+  color: #fff;
+}
+
+.propel .band-dark .measure,
+.propel .band-dark .form-note,
+.propel .band-dark .goal-note,
+.propel .band-dark .why-lead-copy {
+  color: #f3f3f3;
+}
+
+.propel .gold-rule {
+  width: 4.75rem;
+  height: 4px;
+  margin: 1.75rem 0 1.5rem;
+  border: 0;
+  background: var(--asu-gold);
+}
+
+.propel .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.7rem 1.15rem;
+  border: 2px solid var(--asu-maroon);
+  background: var(--asu-maroon);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.22s var(--ease), border-color 0.22s var(--ease), color 0.22s var(--ease), transform 0.22s var(--ease);
+}
+
+.propel .btn:hover {
+  background: var(--asu-maroon-deep);
+  border-color: var(--asu-maroon-deep);
+  color: #fff;
+}
+
+.propel .btn-gold {
+  background: var(--asu-gold);
+  border-color: var(--asu-gold);
+  color: #191919;
+}
+
+.propel .btn-gold:hover {
+  background: #e6b000;
+  border-color: #e6b000;
+  color: #191919;
+}
+
+.propel .btn:active {
+  transform: translateY(1px);
+}
+
+.propel .choice {
+  position: relative;
+}
+
+.propel .choice input {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.propel .choice label {
+  display: block;
+  min-height: 48px;
+  cursor: pointer;
+  transition: background-color 0.28s var(--ease), color 0.28s var(--ease), border-color 0.28s var(--ease), box-shadow 0.28s var(--ease);
+}
+
+.propel .choice:focus-within {
+  outline: 3px solid #191919;
+  outline-offset: 3px;
+}
+
+.propel fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.propel a {
+  color: var(--asu-maroon);
+}
+
+.propel .prose p:last-child {
+  margin-bottom: 0;
 }

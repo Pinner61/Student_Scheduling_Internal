@@ -1,38 +1,29 @@
 .propel {
   --asu-maroon: #8c1d40;
+  --asu-maroon-deep: #6e1733;
   --asu-gold: #ffc627;
-  --asu-black: #000000;
-  --gray-1: #191919;
-  --gray-2: #484848;
-  --gray-3: #747474;
-  --gray-4: #bfbfbf;
-  --gray-5: #d0d0d0;
-  --gray-6: #e8e8e8;
-  --gray-7: #fafafa;
+  --ink: #191919;
+  --muted: #3d3d3d;
+  --rule: #d5d0c8;
+  --paper: #f6f3ee;
   --white: #ffffff;
-  --ink: var(--gray-1);
-  --muted: var(--gray-2);
-  --rule: var(--gray-5);
-  --paper: var(--gray-7);
-  --header-h: 4.25rem;
-  --nav-h: 0px;
-  --max: 80rem;
-  --gutter: clamp(1.25rem, 3vw, 4rem);
-  --measure: 36rem;
+  --header-h: 6.5rem;
+  --max: 76rem;
+  --gutter: clamp(1rem, 3vw, 2rem);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   color: var(--ink);
   background: var(--paper);
   font-family: Arial, Helvetica, "Nimbus Sans", sans-serif;
   font-size: 100%;
-  line-height: 1.5;
+  line-height: 1.55;
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-@media (max-width: 1023px) {
-  .propel {
-    --header-h: 4.25rem;
-    --nav-h: 8.5rem;
-  }
+.propel,
+.propel *,
+.propel *::before,
+.propel *::after {
+  box-sizing: border-box;
 }

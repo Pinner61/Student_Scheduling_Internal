@@ -1,0 +1,248 @@
+.propel .media-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2.75rem);
+  align-items: start;
+}
+
+.propel .why-lead-copy {
+  max-width: 38rem;
+  margin: 0;
+  font-size: clamp(1.15rem, 1.6vw, 1.35rem);
+  line-height: 1.45;
+}
+
+.propel .section-why .story-figure,
+.propel .donors .story-figure {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.propel .section-why .contrast {
+  margin-top: 2rem;
+}
+
+.propel .section-why .contrast-old,
+.propel .section-why .contrast-new {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+.propel .section-why .contrast-new {
+  box-shadow: inset 0 4px 0 var(--asu-gold);
+}
+
+.propel .section-why .contrast h3,
+.propel .section-why .contrast p {
+  color: #fff;
+}
+
+.propel .section-why .contrast-old .contrast-kicker {
+  color: #d0d0d0;
+}
+
+.propel .section-why .contrast-new .contrast-kicker {
+  color: var(--asu-gold);
+}
+
+.propel .story-figure {
+  margin: 0;
+  padding: 0.7rem;
+  background: #fff;
+  border: 1px solid var(--rule);
+}
+
+.propel .story-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.propel .concept-icon {
+  display: block;
+  width: 4.25rem;
+  height: 4.25rem;
+  margin-bottom: 0.75rem;
+  object-fit: contain;
+}
+
+.propel .imagine {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 1rem 2rem;
+  align-items: end;
+  margin: 2rem 0 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+
+.propel .imagine h3 {
+  margin: 0;
+  max-width: 16ch;
+}
+
+.propel .imagine p {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.45;
+}
+
+.propel .concepts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+.propel .concept-choice {
+  opacity: 1;
+}
+
+.propel .concept-choice:hover,
+.propel .concept-choice:focus-within,
+.propel .concept-choice:has(input:checked) {
+  opacity: 1;
+}
+
+.propel .concept-choice label {
+  padding: 0;
+  background: transparent;
+}
+
+.propel .concept-choice .choice-body {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s var(--ease), opacity 0.3s var(--ease), margin-top 0.4s var(--ease);
+}
+
+.propel .concept-choice:has(input:checked) .choice-body {
+  max-height: 8rem;
+  margin-top: 0.55rem;
+  opacity: 1;
+}
+
+.propel .choice-index {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--asu-maroon);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.propel .choice-title,
+.propel .choice-kicker {
+  display: block;
+}
+
+.propel .choice-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.propel .choice-body,
+.propel .choice-kicker {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.propel .concept-choice:has(input:checked) .choice-title {
+  box-shadow: inset 0 -2px 0 var(--asu-gold);
+}
+
+.propel .pull {
+  margin: 1.75rem 0 0;
+  padding: 0 0 0 1rem;
+  border: 0;
+  border-left: 3px solid var(--asu-gold);
+  max-width: 40rem;
+}
+
+.propel .pull p {
+  margin: 0;
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.propel .contrast {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.25rem 0 0;
+}
+
+.propel .contrast article {
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.propel .contrast h3 {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  max-width: 10ch;
+}
+
+.propel .contrast-kicker {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.propel .contrast ul {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.propel .contrast li {
+  padding: 0.55rem 0;
+  border-top: 1px solid currentColor;
+  font-weight: 700;
+}
+
+.propel .contrast-old {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+
+.propel .contrast-old .contrast-kicker {
+  color: var(--muted);
+}
+
+.propel .contrast-new {
+  background: var(--asu-maroon);
+  color: #fff;
+}
+
+.propel .contrast-new h3 {
+  color: #fff;
+}
+
+.propel .contrast-new .contrast-kicker {
+  color: var(--asu-gold);
+}
+
+.propel .section-why .prose,
+.propel #different {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .propel .imagine,
+  .propel .concepts,
+  .propel .contrast,
+  .propel .media-split {
+    grid-template-columns: 1fr;
+  }
+
+  .propel .concept-choice { border: 0; }
+}
