@@ -11,7 +11,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
-    "types": []
+    "types": ["node"]
   },
   "include": ["src", "tests", "vite.config.ts"]
 }
